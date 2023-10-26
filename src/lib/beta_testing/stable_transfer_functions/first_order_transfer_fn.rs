@@ -1,5 +1,7 @@
 use uom::si::{f64::*, time::second};
 
+use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
+
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub struct FirstOrderStableTransferFn {
     process_gain: f64,
@@ -40,36 +42,46 @@ impl FirstOrderStableTransferFn {
         process_time: Time,
         initial_input: f64,
         initial_value: f64,
-        delay: Time,) -> Self {
-        FirstOrderStableTransferFn { 
+        delay: Time,) -> Result<Self, ChemEngProcessControlSimulatorError> {
+
+        if process_time.get::<second>() <= 0.0 {
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
+        }
+        Ok(FirstOrderStableTransferFn { 
             process_gain, 
             process_time, 
             previous_timestep_input: initial_input, 
             offset: initial_value, 
             delay, 
             response_vec: vec![],
-        }
+        })
     }
 
     /// first order filter 
     pub fn new_filter(process_time: Time,
         initial_input: f64,
-        initial_value: f64) -> Self {
-        FirstOrderStableTransferFn { 
+        initial_value: f64) -> Result<Self, ChemEngProcessControlSimulatorError> {
+
+        if process_time.get::<second>() <= 0.0 {
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
+        }
+        Ok(FirstOrderStableTransferFn { 
             process_gain: 1.0, 
             process_time, 
             previous_timestep_input: initial_input, 
             offset: initial_value, 
             delay: Time::new::<second>(0.0), 
             response_vec: vec![],
-        }
+        })
     }
 
     /// sets the user input to some value
     pub fn set_user_input_and_calc_output(&mut self, 
         current_time: Time,
         current_input: f64) 
-    -> f64 {
+    -> Result<f64, ChemEngProcessControlSimulatorError> {
         // check if input is equal to current input 
 
         // case where input is not the same to 9 decimal places
@@ -94,7 +106,7 @@ impl FirstOrderStableTransferFn {
                 start_time,
                 user_input,
                 current_time
-            );
+            )?;
 
             // add response to the vector
             self.response_vec.push(new_response);
@@ -126,7 +138,7 @@ impl FirstOrderStableTransferFn {
 
         let output = self.offset + summation_of_responses;
 
-        return output;
+        return Ok(output);
 
     }
 
@@ -254,14 +266,18 @@ impl FirstOrderResponse {
         process_time: Time,
         start_time: Time,
         user_input: f64,
-        current_time: Time,) -> Self {
-        FirstOrderResponse { 
+        current_time: Time,) -> Result<Self, ChemEngProcessControlSimulatorError> {
+        if process_time.get::<second>() <= 0.0 {
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
+        }
+        Ok(FirstOrderResponse { 
             process_gain, 
             process_time, 
             start_time, 
             user_input, 
             current_time,
-        }
+        })
     }
 
     /// checks if the transfer function has more or less reached 

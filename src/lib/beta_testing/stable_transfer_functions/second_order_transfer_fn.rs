@@ -1,5 +1,7 @@
 use uom::si::{f64::*, time::second};
 
+use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
+
 /// second order system with transfer function 
 /// in the form 
 ///
@@ -54,18 +56,16 @@ impl SecondOrderStableTransferFn {
         damping_factor: f64,
         initial_input: f64,
         initial_value: f64,
-        delay: Time,) -> Self {
+        delay: Time,) -> Result<Self, ChemEngProcessControlSimulatorError> {
 
-        // if damping factor is less than or equal 
-        // 0, should throw an error 
-        // or panic (i will use errors maybe later?)
+        // if damping factor is less than or equal 0, it is unstable
 
         if damping_factor <= 0.0 {
-            todo!("damping factor needs to be more than 0.0, \n 
-                also need to implement Result enum")
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
         }
 
-        SecondOrderStableTransferFn { 
+        Ok(SecondOrderStableTransferFn { 
             process_gain, 
             process_time, 
             previous_timestep_input: initial_input, 
@@ -73,7 +73,7 @@ impl SecondOrderStableTransferFn {
             delay, 
             response_vec: vec![],
             damping_factor,
-        }
+        })
     }
 
     /// second order filter 
@@ -96,7 +96,7 @@ impl SecondOrderStableTransferFn {
     pub fn set_user_input_and_calc_output(&mut self, 
         current_time: Time,
         current_input: f64) 
-    -> f64 {
+    -> Result<f64, ChemEngProcessControlSimulatorError> {
         // check if input is equal to current input 
 
         // case where input is not the same to 9 decimal places
@@ -123,7 +123,7 @@ impl SecondOrderStableTransferFn {
                 start_time,
                 user_input,
                 current_time
-            );
+            )?;
 
             // add response to the vector
             self.response_vec.push(new_response);
@@ -155,7 +155,7 @@ impl SecondOrderStableTransferFn {
 
         let output = self.offset + summation_of_responses;
 
-        return output;
+        return Ok(output);
 
     }
 
@@ -290,24 +290,23 @@ impl SecondOrderStableStepResponse {
         damping_factor: f64,
         start_time: Time,
         user_input: f64,
-        current_time: Time,) -> Self {
+        current_time: Time,) -> Result<Self, ChemEngProcessControlSimulatorError> {
 
-        // if damping factor is less than or equal 
-        // 0, should throw an error 
-        // or panic (i will use errors maybe later?)
+        // if damping factor is less than or equal 0,
+        // return an error
 
         if damping_factor <= 0.0 {
-            todo!("damping factor needs to be more than 0.0, \n 
-                also need to implement Result enum")
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
         }
-        SecondOrderStableStepResponse { 
+        Ok(SecondOrderStableStepResponse { 
             process_gain, 
             process_time, 
             start_time, 
             user_input, 
             current_time,
             damping_factor,
-        }
+        })
     }
 
     /// checks if the transfer function has more or less reached 
