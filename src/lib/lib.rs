@@ -12,3 +12,7 @@ mod tests {
         assert_eq!(result, 4);
     }
 }
+
+pub mod alpha_nightly;
+pub mod beta_testing;
+pub mod stable;
