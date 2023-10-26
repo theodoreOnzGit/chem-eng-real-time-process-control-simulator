@@ -523,4 +523,3 @@ impl SecondOrderStableStepResponse {
     }
 }
 
-

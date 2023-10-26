@@ -1,68 +1,107 @@
-use uom::si::{f64::*, time::second};
+use uom::si::{f64::*, time::second, frequency::hertz, ratio::ratio};
 
+/// second order system with transfer function 
+/// in the form 
+///
+/// K_p / ( tau^2 s^2 + 2 * tau * zeta s + 1)
+///
+/// tau is process time 
+/// zeta is damping factor 
+/// K_p is process gain (dimensionless, be careful)
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
-pub struct FirstOrderStableTransferFn {
-    process_gain: f64,
-    process_time: Time,
+pub struct DecayingSinusoid {
+    magnitude: f64,
+    /// decay frequency or 1/decay time
+    a: Frequency,
     previous_timestep_input: f64,
+    /// oscillation frequency
+    omega: Frequency,
     /// previous timestep output
     offset: f64,
     /// delay
     delay: Time,
-
     /// vector of first order responses 
-    response_vec: Vec<FirstOrderResponse>,
+    response_vec: Vec<DecaySinusoidResponse>,
+    /// choose whether it's a sine or cosine,
+    sinusoid_type: TransferFnSinusoidType,
 }
 
-impl Default for FirstOrderStableTransferFn {
+#[derive(Debug,PartialEq, PartialOrd, Clone, Copy)]
+pub enum TransferFnSinusoidType {
+    Sine,
+    Cosine
+}
+
+impl Default for DecayingSinusoid {
     /// default is: 
     ///
-    /// 1 / (s + 1)
-    ///
-    /// with initial user input of 0.0 
-    /// and initial user value of 0.0
+    /// 1 / ( (s+1)^2 + 1)
+    /// time in seconds, 
+    /// frequency in hertz
     fn default() -> Self {
-        FirstOrderStableTransferFn { 
-            process_gain: 1.0, 
-            process_time: Time::new::<second>(1.0), 
+        DecayingSinusoid 
+            { magnitude: 1.0, 
+            a: Frequency::new::<hertz>(1.0), 
             previous_timestep_input: 0.0, 
             offset: 0.0, 
             delay: Time::new::<second>(0.0), 
             response_vec: vec![],
+            omega: Frequency::new::<hertz>(1.0),
+            sinusoid_type: TransferFnSinusoidType::Sine,
         }
     }
 }
 
-impl FirstOrderStableTransferFn {
+impl DecayingSinusoid {
 
     /// constructors 
-    pub fn new(process_gain: f64,
-        process_time: Time,
+    pub fn new_sine(magnitude: f64,
+        decay_frequency: Frequency,
         initial_input: f64,
         initial_value: f64,
-        delay: Time,) -> Self {
-        FirstOrderStableTransferFn { 
-            process_gain, 
-            process_time, 
+        delay: Time, omega:Frequency) -> Self {
+
+        // if damping factor is less than or equal 
+        // 0, should throw an error 
+        // or panic (i will use errors maybe later?)
+
+
+        DecayingSinusoid { 
+            magnitude: magnitude, 
+            a: decay_frequency, 
             previous_timestep_input: initial_input, 
             offset: initial_value, 
             delay, 
             response_vec: vec![],
+            omega,
+            sinusoid_type: TransferFnSinusoidType::Sine,
         }
+
     }
 
-    /// first order filter 
-    pub fn new_filter(process_time: Time,
+
+    pub fn new_cosine(magnitude: f64,
+        decay_frequency: Frequency,
         initial_input: f64,
-        initial_value: f64) -> Self {
-        FirstOrderStableTransferFn { 
-            process_gain: 1.0, 
-            process_time, 
+        initial_value: f64,
+        delay: Time, omega:Frequency) -> Self {
+
+        // if damping factor is less than or equal 
+        // 0, should throw an error 
+        // or panic (i will use errors maybe later?)
+
+
+        DecayingSinusoid { 
+            magnitude: magnitude, 
+            a: decay_frequency, 
             previous_timestep_input: initial_input, 
             offset: initial_value, 
-            delay: Time::new::<second>(0.0), 
+            delay, 
             response_vec: vec![],
+            omega,
+            sinusoid_type: TransferFnSinusoidType::Cosine,
         }
+
     }
 
     /// sets the user input to some value
@@ -75,25 +114,29 @@ impl FirstOrderStableTransferFn {
         // case where input is not the same to 9 decimal places
 
         let input_changed: bool = 
-            (current_input * 1e9).round() 
-            - (self.previous_timestep_input.clone()*1e9).round() != 0.0 ;
+        (current_input * 1e9).round() 
+        - (self.previous_timestep_input.clone()*1e9).round() != 0.0 ;
 
         if input_changed {
             // need to add a response to the vector
 
-            let process_gain = self.process_gain;
-            let process_time = self.process_time;
+            let magnitude = self.magnitude;
+            let process_time = self.a;
             let user_input = current_input - self.previous_timestep_input;
             // the time where the first order response kicks in
             let start_time = current_time + self.delay;
+            let sinusoid_frequency = self.omega;
+            let sinusoid_type = self.sinusoid_type;
 
             // make a new response
-            let new_response = FirstOrderResponse::new(
-                process_gain,
+            let new_response = DecaySinusoidResponse::new(
+                magnitude,
                 process_time,
                 start_time,
                 user_input,
-                current_time
+                current_time,
+                sinusoid_frequency,
+                sinusoid_type
             );
 
             // add response to the vector
@@ -104,11 +147,11 @@ impl FirstOrderStableTransferFn {
             self.previous_timestep_input = current_input;
 
             // then we are done!
-            
+
         }
 
         // clean up the vector first
-        self.clear_first_order_response_vector();
+        self.clear_sinusoid_response_vector();
 
         // need to calculate using the list of 
         // first order response vectors as per normal
@@ -120,8 +163,8 @@ impl FirstOrderStableTransferFn {
 
         let summation_of_responses: f64 = self.response_vec.
             iter_mut().map(
-                |first_order_response|{
-                    first_order_response.calculate_response(current_time)}
+                |second_order_response|{
+                    second_order_response.calculate_response(current_time)}
             ).sum();
 
         let output = self.offset + summation_of_responses;
@@ -131,7 +174,7 @@ impl FirstOrderStableTransferFn {
     }
 
     /// clears the item if they have reached steady state
-    fn clear_first_order_response_vector(&mut self){
+    fn clear_sinusoid_response_vector(&mut self){
 
         let index_of_steady_state_result = self.response_vec.iter().position(
             |first_order_response| {
@@ -148,7 +191,7 @@ impl FirstOrderStableTransferFn {
                 // offset
                 let first_order_response = self.response_vec[index].clone();
                 let steady_state_value_of_response = 
-                    first_order_response.steady_state_value();
+                first_order_response.steady_state_value();
                 self.offset += steady_state_value_of_response;
 
                 // then i remove the first order response from the 
@@ -171,11 +214,11 @@ impl FirstOrderStableTransferFn {
         );
         // check if steady state responses are present
         let mut steady_state_responses_present = 
-            match index_of_steady_state_result {
-                Some(_) => true,
-                None => false,
-            };
-        
+        match index_of_steady_state_result {
+            Some(_) => true,
+            None => false,
+        };
+
         if !steady_state_responses_present {
             return;
         } 
@@ -197,7 +240,7 @@ impl FirstOrderStableTransferFn {
                     // offset
                     let first_order_response = self.response_vec[index].clone();
                     let steady_state_value_of_response = 
-                        first_order_response.steady_state_value();
+                    first_order_response.steady_state_value();
                     self.offset += steady_state_value_of_response;
 
                     // then i remove the first order response from the 
@@ -215,78 +258,96 @@ impl FirstOrderStableTransferFn {
         return;
 
     }
-    
+
 }
 
 
 
 
-/// first order response struct, 
+/// second order response struct, 
 /// will help to caluclate
-/// u1(t - t1) * Kp * [1-exp(- [t-t1] / tau])
+/// step responses for underdamped, crtically damped and 
+/// overdamped stable systems
 #[derive(Debug,PartialEq, PartialOrd, Clone, Copy)]
-pub struct FirstOrderResponse {
-    process_gain: f64,
-    process_time: Time,
+pub struct DecaySinusoidResponse {
+    magnitude: f64,
+    a: Frequency,
     start_time: Time,
     user_input: f64,
     current_time: Time,
+    omega: Frequency,
+    sinusoid_type: TransferFnSinusoidType,
 }
 
-impl Default for FirstOrderResponse {
+impl Default for DecaySinusoidResponse {
+    /// default is a critically damped system with 
+    /// 1 / ( (s+1)^2 + 1)
+    /// time in seconds, 
+    /// frequency in hertz
     fn default() -> Self {
-        FirstOrderResponse { 
-            process_gain: 1.0, 
-            process_time: Time::new::<second>(1.0), 
+        DecaySinusoidResponse { 
+            magnitude: 1.0, 
+            a: Frequency::new::<hertz>(1.0), 
             start_time: Time::new::<second>(0.0), 
             user_input: 1.0, 
             current_time: Time::new::<second>(0.0),
+            omega: Frequency::new::<hertz>(1.0),
+            sinusoid_type: TransferFnSinusoidType::Sine,
         }
     }
 }
 
 
-impl FirstOrderResponse {
+impl DecaySinusoidResponse {
 
     /// constructor 
     pub fn new(
-        process_gain: f64,
-        process_time: Time,
+        magnitude: f64,
+        a: Frequency,
         start_time: Time,
         user_input: f64,
-        current_time: Time,) -> Self {
-        FirstOrderResponse { 
-            process_gain, 
-            process_time, 
+        current_time: Time,
+        omega: Frequency,
+        sinusoid_type: TransferFnSinusoidType) -> Self {
+
+        // if damping factor is less than or equal 
+        // 0, should throw an error 
+        // or panic (i will use errors maybe later?)
+
+        DecaySinusoidResponse { 
+            magnitude, 
+            a, 
             start_time, 
             user_input, 
             current_time,
+            omega,
+            sinusoid_type,
         }
     }
 
     /// checks if the transfer function has more or less reached 
     /// steady state,
     ///
-    /// I consider this where the time elapsed is 20 times 
-    /// the process_time
-    ///
-    /// this is because exp(-20) is about 2e-9, it is tiny...
+    /// this is determined by exp(-at) 
+    /// if at is 20 or more, then we have reached steady state
     pub fn is_steady_state(&self) -> bool {
         let time_elapsed = self.current_time - self.start_time;
 
-        let time_ratio: f64 = time_elapsed.value/self.process_time.value;
+        //  (at) in exp(-at)
+        let at: Ratio = time_elapsed *  self.a;
 
-        if time_ratio > 20.0 {
+        if at > Ratio::new::<ratio>(20.0){
             return true;
         }
+
+        // 
 
         return false;
     }
 
 
-    /// calculates the response of the first order system
+    /// calculates the response of the second order system
     /// at a given time
-    /// u1(t - t1) * Kp * [1-exp(- [t-t1] / tau])
     pub fn calculate_response(&mut self, simulation_time: Time) -> f64 {
 
         // get the current time (t - t0)
@@ -303,23 +364,39 @@ impl FirstOrderResponse {
             return 0.0;
         }
 
-        let time_ratio: Ratio = time_elapsed /  self.process_time;
-        let exponent_ratio: f64 = -time_ratio.value;
 
-        // otherwise, calculate as per normal
 
-        // u1(t - t1) * Kp * [1-exp(- [t-t1] / tau])
-        let response: f64 = self.steady_state_value()
-            * (1.0 - exponent_ratio.exp());
+        let response: f64;
+        let at: Ratio = time_elapsed *  self.a;
+        let at: f64 = at.get::<ratio>();
+        let omega_t: Ratio = time_elapsed * self.omega;
+        let omega_t: f64 = omega_t.get::<ratio>();
+
+        response = match self.sinusoid_type {
+            TransferFnSinusoidType::Sine => {
+                self.user_input
+                * self.magnitude 
+                * (-at).exp()
+                * (omega_t).sin()
+            },
+            TransferFnSinusoidType::Cosine => {
+                self.user_input
+                * self.magnitude 
+                * (-at).exp()
+                * (omega_t).cos()
+            },
+        };
 
         return response;
+
     }
 
     /// steady state value 
-    /// u1(t - t1) * Kp 
+    /// of a decaying sinusoid is zero
     pub fn steady_state_value(&self) -> f64 {
-        let response: f64 = self.user_input * self.process_gain;
+        let response: f64 = 0.0;
         response
     }
 }
+
 
