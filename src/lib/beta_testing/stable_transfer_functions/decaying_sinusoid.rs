@@ -1,5 +1,7 @@
 use uom::si::{f64::*, time::second, frequency::hertz, ratio::ratio};
 
+use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
+
 /// second order system with transfer function 
 /// in the form 
 ///
@@ -59,15 +61,24 @@ impl DecayingSinusoid {
         decay_frequency: Frequency,
         initial_input: f64,
         initial_value: f64,
-        delay: Time, omega:Frequency) -> Self {
+        delay: Time, omega:Frequency) -> Result<Self, ChemEngProcessControlSimulatorError> {
 
         // if damping factor is less than or equal 
         // 0, should throw an error 
         // or panic (i will use errors maybe later?)
 
+        if decay_frequency.value <= 0.0 {
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
+        }
 
-        DecayingSinusoid { 
-            magnitude: magnitude, 
+        if omega.value <= 0.0 {
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
+        }
+
+        Ok(DecayingSinusoid { 
+            magnitude, 
             a: decay_frequency, 
             previous_timestep_input: initial_input, 
             offset: initial_value, 
@@ -75,7 +86,7 @@ impl DecayingSinusoid {
             response_vec: vec![],
             omega,
             sinusoid_type: TransferFnSinusoidType::Sine,
-        }
+        })
 
     }
 
@@ -84,15 +95,20 @@ impl DecayingSinusoid {
         decay_frequency: Frequency,
         initial_input: f64,
         initial_value: f64,
-        delay: Time, omega:Frequency) -> Self {
+        delay: Time, omega:Frequency) -> Result<Self, ChemEngProcessControlSimulatorError> {
 
-        // if damping factor is less than or equal 
-        // 0, should throw an error 
-        // or panic (i will use errors maybe later?)
+        if decay_frequency.value <= 0.0 {
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
+        }
 
+        if omega.value <= 0.0 {
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
+        }
 
-        DecayingSinusoid { 
-            magnitude: magnitude, 
+        Ok(DecayingSinusoid { 
+            magnitude, 
             a: decay_frequency, 
             previous_timestep_input: initial_input, 
             offset: initial_value, 
@@ -100,7 +116,7 @@ impl DecayingSinusoid {
             response_vec: vec![],
             omega,
             sinusoid_type: TransferFnSinusoidType::Cosine,
-        }
+        })
 
     }
 
@@ -108,7 +124,7 @@ impl DecayingSinusoid {
     pub fn set_user_input_and_calc_output(&mut self, 
         current_time: Time,
         current_input: f64) 
-    -> f64 {
+    -> Result<f64,ChemEngProcessControlSimulatorError> {
         // check if input is equal to current input 
 
         // case where input is not the same to 9 decimal places
@@ -137,7 +153,7 @@ impl DecayingSinusoid {
                 current_time,
                 sinusoid_frequency,
                 sinusoid_type
-            );
+            )?;
 
             // add response to the vector
             self.response_vec.push(new_response);
@@ -169,7 +185,7 @@ impl DecayingSinusoid {
 
         let output = self.offset + summation_of_responses;
 
-        return output;
+        return Ok(output);
 
     }
 
@@ -308,13 +324,17 @@ impl DecaySinusoidResponse {
         user_input: f64,
         current_time: Time,
         omega: Frequency,
-        sinusoid_type: TransferFnSinusoidType) -> Self {
+        sinusoid_type: TransferFnSinusoidType) -> Result<Self,ChemEngProcessControlSimulatorError> {
 
         // if damping factor is less than or equal 
         // 0, should throw an error 
         // or panic (i will use errors maybe later?)
 
-        DecaySinusoidResponse { 
+        if a.value <= 0.0 {
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
+        }
+        Ok(DecaySinusoidResponse { 
             magnitude, 
             a, 
             start_time, 
@@ -322,7 +342,7 @@ impl DecaySinusoidResponse {
             current_time,
             omega,
             sinusoid_type,
-        }
+        })
     }
 
     /// checks if the transfer function has more or less reached 
