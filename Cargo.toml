@@ -1,0 +1,17 @@
+[package]
+name = "chem-eng-real-time-process-control-simulator"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+[[bin]]
+name = "library_demo"
+path = "src/main.rs"
+
+[lib]
+name = "chem_eng_real_time_process_control_simulator"
+path = "src/lib/lib.rs"
+
