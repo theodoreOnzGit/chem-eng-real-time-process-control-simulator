@@ -1,7 +1,9 @@
 use uom::si::{f64::*, Quantity, Dimension, ISQ, SI};
-use uom::typenum::*;
+use uom::{typenum::*, ConstZero};
 
 use crate::beta_testing::TimeSquared;
+use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
+use crate::beta_testing::stable_transfer_functions::decaying_sinusoid::DecayingSinusoid;
 use crate::beta_testing::stable_transfer_functions::second_order_transfer_fn::SecondOrderStableTransferFnNoZeroes;
 
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
@@ -73,6 +75,11 @@ impl SecondOrder {
         todo!()
     }
 
+    pub fn set_dead_time(&mut self, dead_time: Time){
+
+        todo!()
+    }
+
     // underdamped stable systems
     #[inline]
     fn new_underdamped_stable_system(tau_p: Time,
@@ -83,15 +90,45 @@ impl SecondOrder {
         a1: TimeSquared,
         a2: TimeSquared,
         b1: Time,
-        b2: Time){
+        b2: Time) -> Result<Self, ChemEngProcessControlSimulatorError>{
 
         // underdamped systems will contain two decaying_sinusoid
         // types and one SecondOrderStableTransferFunction Type
         // 
         let mut second_order_stable_transfer_fn_no_zeroes: 
-        SecondOrderStableTransferFnNoZeroes;
+        SecondOrderStableTransferFnNoZeroes = 
+        SecondOrderStableTransferFnNoZeroes::new(k_p, 
+            tau_p, 
+            zeta, 
+            Ratio::ZERO, 
+            Ratio::ZERO, 
+            Time::ZERO)?;
 
 
+        // let's make the decaying sinusoids first: 
+
+        let sine_coeff: Ratio = a1/a2;
+        let cosine_coeff: Ratio = sine_coeff * (lambda - b1/a1)/omega;
+
+        // now let's get the waveforms
+
+        let cosine_term: DecayingSinusoid = DecayingSinusoid::new_cosine(
+            cosine_coeff, 
+            lambda, 
+            Ratio::ZERO, 
+            Ratio::ZERO, 
+            Time::ZERO, 
+            omega)?;
+
+        let sine_term: DecayingSinusoid = DecayingSinusoid::new_cosine(
+            sine_coeff, 
+            lambda, 
+            Ratio::ZERO, 
+            Ratio::ZERO, 
+            Time::ZERO, 
+            omega)?;
+
+        todo!()
 
     }
 

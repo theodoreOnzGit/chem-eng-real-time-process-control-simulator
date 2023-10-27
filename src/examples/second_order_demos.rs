@@ -37,6 +37,7 @@ pub(crate) fn stable_second_order(){
     // // do this before starting up
     // tf.set_initial_output(initial_value);
     // tf.set_initial_input(initial_value);
+    // tf.set_dead_time(initial_value);
     //
     let stuff_to_do_in_simulation_loop = move ||{
 
