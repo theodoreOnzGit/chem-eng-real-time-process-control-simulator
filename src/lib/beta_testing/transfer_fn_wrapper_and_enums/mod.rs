@@ -22,9 +22,6 @@ impl TransferFnTraits for TransferFn {
         }
     }
 
-    fn csv_plot(&self) {
-        todo!()
-    }
 
     fn set_user_input_and_calc(&mut self, 
         user_input: Ratio,
@@ -43,7 +40,6 @@ impl TransferFnTraits for TransferFn {
 
 pub trait TransferFnTraits {
     fn set_dead_time(&mut self, dead_time: Time);
-    fn csv_plot(&self);
     fn set_user_input_and_calc(&mut self, 
         user_input: Ratio,
         time_of_input: Time) -> Result<Ratio, 

@@ -62,9 +62,6 @@ impl TransferFnTraits for TransferFnSecondOrder {
         }
     }
 
-    fn csv_plot(&self){
-        todo!()
-    }
 
     fn set_user_input_and_calc(&mut self, user_input: Ratio,
         time: Time) -> 
