@@ -65,7 +65,7 @@ pub(crate) fn stable_second_order_simulation(){
     let stuff_to_do_in_simulation_loop = move ||{
 
         // let _output = tf.set_user_input_and_calc(user_input,time);
-        // tf.csv_plot();
+        // tf.csv_write_values();
         //
         // probably want to assert something as well
         // assert approx equal 

@@ -46,6 +46,21 @@ impl TransferFnTraits for TransferFn {
         }
     }
 
+    fn csv_write_values(&mut self, 
+        wtr: &mut Writer<std::fs::File>,
+        time: Time,
+        input: Ratio,
+        output: Ratio) -> Result<(), 
+    ChemEngProcessControlSimulatorError> {
+        match self {
+            TransferFn::FirstOrder => todo!(),
+            TransferFn::SecondOrder(second_order) => {
+                second_order.csv_write_values(wtr, time,
+                    input, output)
+            },
+        }
+    }
+
 
 }
 
@@ -61,6 +76,12 @@ pub trait TransferFnTraits {
     fn spawn_writer(&mut self, name: String) -> Result<Writer<std::fs::File>,
     ChemEngProcessControlSimulatorError>;
 
+    fn csv_write_values(&mut self, 
+        wtr: &mut Writer<std::fs::File>,
+        time: Time,
+        input: Ratio,
+        output: Ratio) -> Result<(), 
+    ChemEngProcessControlSimulatorError>;
 }
 
 

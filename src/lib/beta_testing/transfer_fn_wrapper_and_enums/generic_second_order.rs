@@ -1,6 +1,7 @@
 use csv::Writer;
 use uom::si::ratio::ratio;
 use uom::si::f64::*;
+use uom::si::time::second;
 use uom::{ConstZero};
 
 use crate::beta_testing::TimeSquared;
@@ -116,6 +117,24 @@ impl TransferFnTraits for TransferFnSecondOrder {
         }
         let mut wtr = Writer::from_path(title_string)?;
         Ok(wtr)
+    }
+
+    fn csv_write_values(&mut self, 
+        wtr: &mut Writer<std::fs::File>,
+        time: Time,
+        input: Ratio,
+        output: Ratio) -> Result<(), 
+    ChemEngProcessControlSimulatorError> {
+
+        let current_time_string = time.get::<second>().to_string();
+        let input_string = input.get::<ratio>().to_string();
+        let output_string = output.get::<ratio>().to_string();
+
+        wtr.write_record(&[current_time_string,
+            input_string,
+            output_string,])?;
+
+        Ok(())
     }
 
 
