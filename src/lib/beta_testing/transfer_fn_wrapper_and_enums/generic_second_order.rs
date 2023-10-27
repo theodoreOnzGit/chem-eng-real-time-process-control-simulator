@@ -102,6 +102,15 @@ impl SecondOrder {
         todo!()
     }
 
+    pub fn csv_plot(&self){
+        todo!()
+    }
+
+    pub fn set_user_input_and_calc(&mut self, user_input: Ratio,
+        time: Time) {
+        
+    }
+
     // underdamped stable systems
     #[inline]
     fn new_underdamped_stable_system(tau_p: Time,
