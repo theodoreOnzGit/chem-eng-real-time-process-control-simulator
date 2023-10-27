@@ -1,6 +1,8 @@
 use uom::si::{f64::*, Quantity, Dimension, ISQ, SI};
 use uom::typenum::*;
 
+use crate::beta_testing::TimeSquared;
+
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub enum SecondOrder {
     Stable,
@@ -32,15 +34,12 @@ impl SecondOrder {
     /// and you'll have to provide a1inverse and a2inverse
     /// rather than a1 and a2
     /// 
-    pub fn new(a1inverse: FrequencyDrift,
+    pub fn new(a1: TimeSquared,
     b1: Time,
     c1: Ratio,
-    a2inverse: FrequencyDrift,
+    a2: TimeSquared,
     b2: Time,
     c2: Ratio){
-
-        let a1 = a1inverse.recip();
-        let a2 = a2inverse.recip();
 
         // process time 
         let tau_p: Time = (a2/c2).sqrt();
