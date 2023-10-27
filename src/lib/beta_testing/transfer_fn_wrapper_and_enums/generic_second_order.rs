@@ -195,7 +195,7 @@ impl TransferFnSecondOrder {
             // undamped system
             return Self::new_underdamped_stable_system(tau_p, 
                 zeta, 
-                k_p, lambda, omega, a1, a2, b1, b2);
+                k_p, lambda, omega, a1, a2, b1);
 
         } else if zeta_value == 1.0 {
             // critically damped system, not implemented yet
@@ -219,8 +219,7 @@ impl TransferFnSecondOrder {
         omega: Frequency,
         a1: TimeSquared,
         a2: TimeSquared,
-        b1: Time,
-        b2: Time) -> Result<Self, ChemEngProcessControlSimulatorError>{
+        b1: Time) -> Result<Self, ChemEngProcessControlSimulatorError>{
 
         // underdamped systems will contain two decaying_sinusoid
         // types and one SecondOrderStableTransferFunction Type
