@@ -119,21 +119,22 @@ impl TransferFnSecondOrder {
 
         if zeta_value < 0.0 {
             // unstable system
-            todo!();
+            todo!("unstable system, not implemented");
         } else if zeta_value < 1.0 {
-
-        } else if zeta_value == 1.0 {
             // undamped system
             return Self::new_underdamped_stable_system(tau_p, 
                 zeta, 
                 k_p, lambda, omega, a1, a2, b1, b2);
-        } else if zeta_value > 1.0 {
+
+        } else if zeta_value == 1.0 {
+            // critically damped system, not implemented yet
+            todo!("critically system, not implemented yet");
+        } else {
             
             // overdamped system
-            todo!();
+            todo!("overdamped system, not implemented yet");
         }
 
-        todo!()
 
     }
 
@@ -197,7 +198,7 @@ impl TransferFnSecondOrder {
 }
 
 
-#[cfg(test)]
+#[test]
 pub fn test_dead_time(){
     use uom::si::time::second;
     use uom::si::time::millisecond;
@@ -221,16 +222,17 @@ pub fn test_dead_time(){
 
     let a2: 
     TimeSquared = FrequencyDrift::new::<hertz_per_second>(1.0).recip();
-    let b2: Time = Time::new::<second>(2.0);
+    let b2: Time = Time::new::<second>(1.0);
     let c2: Ratio = Ratio::new::<ratio>(2.0);
     let mut current_simulation_time: Time = Time::new::<second>(0.0);
     let max_simulation_time: Time = Time::new::<second>(60.0);
     let timestep: Time = Time::new::<millisecond>(60.0);
 
-    let tf: TransferFn = 
+    let mut tf: TransferFn = 
     TransferFnSecondOrder::new(a1, b1, c1, a2, b2, c2).unwrap().into();
 
     let dead_time = Time::new::<second>(5.0);
+    tf.set_dead_time(dead_time);
 
 
 }

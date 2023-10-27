@@ -1,4 +1,4 @@
-pub(crate) mod prelude;
+pub mod prelude;
 pub(crate) mod stable_transfer_functions;
 pub(crate) mod controllers;
 pub mod errors;
@@ -12,7 +12,7 @@ Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>;
 
 // Time squared unit for use in second order functions
 
-#[cfg(test)]
+#[test]
 pub fn timesq_test(){
     // this just tests the time squared unit
     use uom::si::{time::second, f64::Time};
