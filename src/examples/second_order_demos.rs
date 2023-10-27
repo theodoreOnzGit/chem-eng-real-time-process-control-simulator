@@ -20,15 +20,17 @@ pub(crate) fn stable_second_order(){
     let c2: Ratio = Ratio::new::<ratio>(2.0);
 
 
-    let user_task = move ||{
+    //let tf = TransferFn::SecondOrder::new(a1, b1, c1, a2, b2, c2);
+    //
+    let stuff_to_do_in_simulation_loop = move ||{
 
         dbg!(a1);
     };
 
-    let user_task_ptr = Arc::new(Mutex::new(user_task));
+    // need to create a pointer for the stuff_to_do_in_simulation_loop
+    // this is to enable parallelism
+    let user_task_ptr = Arc::new(Mutex::new(stuff_to_do_in_simulation_loop));
     simulation_template(user_task_ptr);
-    //let tf = TransferFn::SecondOrder::new(a1, b1, c1, a2, b2, c2);
-    //
 
 
 }
