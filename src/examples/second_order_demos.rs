@@ -2,7 +2,6 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 
 use uom::si::f64::*;
-use uom::si::frequency::hertz;
 use uom::si::frequency_drift::hertz_per_second;
 use uom::si::ratio::ratio;
 use uom::si::time::{second, millisecond};

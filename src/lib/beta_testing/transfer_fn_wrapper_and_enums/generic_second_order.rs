@@ -1,6 +1,6 @@
 use uom::si::ratio::ratio;
-use uom::si::{f64::*, Quantity, Dimension, ISQ, SI};
-use uom::{typenum::*, ConstZero};
+use uom::si::f64::*;
+use uom::{ConstZero};
 
 use crate::beta_testing::TimeSquared;
 use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
@@ -193,12 +193,12 @@ impl SecondOrder {
 
 
 #[cfg(test)]
-fn test_dead_time(){
+pub fn test_dead_time(){
     use uom::si::time::second;
     use uom::si::time::millisecond;
     use uom::si::frequency_drift::hertz_per_second;
-
-    use crate::beta_testing::transfer_fn_wrapper_and_enums::TransferFn;
+    use uom::si::{Quantity, ISQ, SI};
+    use uom::typenum::*;
 
 
     /// G(s) = exp(-5s)
@@ -215,14 +215,17 @@ fn test_dead_time(){
     let c1: Ratio = Ratio::new::<ratio>(1.0);
 
     let a2: 
-    TimeSquared = FrequencyDrift::new::<hertz_per_second>(2.0).recip();
+    TimeSquared = FrequencyDrift::new::<hertz_per_second>(1.0).recip();
     let b2: Time = Time::new::<second>(2.0);
     let c2: Ratio = Ratio::new::<ratio>(2.0);
     let mut current_simulation_time: Time = Time::new::<second>(0.0);
     let max_simulation_time: Time = Time::new::<second>(60.0);
     let timestep: Time = Time::new::<millisecond>(60.0);
 
-    //let tf = TransferFn::SecondOrder::new(a1,b1,c1,a2,b2,c2);
+    let tf: TransferFn = 
+    SecondOrder::new(a1, b1, c1, a2, b2, c2).unwrap().into();
+
+    dbg!(tf);
 
 }
 

@@ -13,7 +13,7 @@ Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>;
 // Time squared unit for use in second order functions
 
 #[cfg(test)]
-pub fn timesq_test (){
+pub fn timesq_test(){
     // this just tests the time squared unit
     use uom::si::{time::second, f64::Time};
 
