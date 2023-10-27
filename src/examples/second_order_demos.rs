@@ -4,9 +4,8 @@ use std::thread;
 use chem_eng_real_time_process_control_simulator::beta_testing::prelude::*;
 use uom::ConstZero;
 use uom::si::f64::*;
-use uom::si::frequency_drift::hertz_per_second;
 use uom::si::ratio::ratio;
-use uom::si::time::{second, millisecond};
+use uom::si::time::second;
 
 /// 
 /// This is a simulation of:
@@ -59,6 +58,10 @@ pub(crate) fn stable_second_order_simulation(){
 
     let mut user_input = Ratio::ZERO;
 
+    // writer, users will create his or her own writer 
+
+
+
     let stuff_to_do_in_simulation_loop = move ||{
 
         // let _output = tf.set_user_input_and_calc(user_input,time);
@@ -75,9 +78,9 @@ pub(crate) fn stable_second_order_simulation(){
             user_input = Ratio::new::<ratio>(9.0);
         }
 
-        let output = tf.set_user_input_and_calc(
+        let _output = tf.set_user_input_and_calc(
             user_input,current_simulation_time).unwrap();
-        dbg!(output);
+        //dbg!(output);
         // for example
         assert_abs_diff_eq!(1.0,1.01, epsilon = 0.1);
         

@@ -1,3 +1,4 @@
+use csv::Writer;
 use uom::si::f64::*;
 /// generic enum for a Transfer Function
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
@@ -34,6 +35,18 @@ impl TransferFnTraits for TransferFn {
             },
         }
     }
+
+    fn spawn_writer(&mut self, name: String) -> Result<Writer<std::fs::File>,
+    ChemEngProcessControlSimulatorError>{
+        match self {
+            TransferFn::FirstOrder => todo!(),
+            TransferFn::SecondOrder(second_order) => {
+                second_order.spawn_writer(name)
+            },
+        }
+    }
+
+
 }
 
 
@@ -43,6 +56,9 @@ pub trait TransferFnTraits {
     fn set_user_input_and_calc(&mut self, 
         user_input: Ratio,
         time_of_input: Time) -> Result<Ratio, 
+    ChemEngProcessControlSimulatorError>;
+
+    fn spawn_writer(&mut self, name: String) -> Result<Writer<std::fs::File>,
     ChemEngProcessControlSimulatorError>;
 
 }

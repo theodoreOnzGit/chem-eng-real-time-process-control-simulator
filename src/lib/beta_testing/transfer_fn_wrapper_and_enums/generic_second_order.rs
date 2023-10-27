@@ -101,6 +101,24 @@ impl TransferFnTraits for TransferFnSecondOrder {
         }
 
     }
+
+    fn spawn_writer(&mut self, name: String) -> Result<Writer<std::fs::File>,
+    ChemEngProcessControlSimulatorError>{
+        let mut title_string: String = name;
+        match self {
+            TransferFnSecondOrder::StableUnderdamped(_, _, _) => {
+                title_string += "2nd_ord_transfer_fn_stable_underdamped.csv";
+            },
+            TransferFnSecondOrder::StableCriticallydamped => todo!(),
+            TransferFnSecondOrder::StableOverdamped => todo!(),
+            TransferFnSecondOrder::Unstable => todo!(),
+            TransferFnSecondOrder::Undamped => todo!(),
+        }
+        let mut wtr = Writer::from_path(title_string)?;
+        Ok(wtr)
+    }
+
+
 }
 
 impl TransferFnSecondOrder {
@@ -130,21 +148,6 @@ impl TransferFnSecondOrder {
     b2: Time,
     c2: Ratio) -> Result<Self,ChemEngProcessControlSimulatorError> {
 
-        let mut title_string: String = "2nd_ord_transfer_fn_".to_owned();
-        title_string += &a1.value.to_string();
-        title_string += "s_squared_plus_";
-        title_string += &b1.value.to_string();
-        title_string += "s_plus_";
-        title_string += &c1.value.to_string();
-        title_string += "_over_";
-        title_string += &a2.value.to_string();
-        title_string += "s_squared_plus_";
-        title_string += &b2.value.to_string();
-        title_string += "s_plus_";
-        title_string += &c2.value.to_string();
-        title_string += ".csv";
-        let mut wtr: Writer<std::fs::File> = Writer::from_path(title_string)
-            .unwrap();
 
         // process time 
         let tau_p: Time = (a2/c2).sqrt();

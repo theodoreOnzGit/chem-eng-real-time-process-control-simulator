@@ -18,8 +18,17 @@ pub enum ChemEngProcessControlSimulatorError {
     #[error("wrong transfer function type")]
     WrongTransferFnType,
 
+    #[error("csv error")]
+    CsvError(csv::Error),
+
 
     
+}
+
+impl From<csv::Error> for ChemEngProcessControlSimulatorError {
+    fn from(csv_error: csv::Error) -> Self {
+        Self::CsvError(csv_error)
+    }
 }
 
 ///  converts ThermalHydraulicsLibError from string error
@@ -36,10 +45,15 @@ impl Into<String> for ChemEngProcessControlSimulatorError {
                 string
             },
             ChemEngProcessControlSimulatorError::UnstableDampingFactorForStableTransferFunction => {
-                self.into()
+                // just recursively calling, probably need to check 
+                // thermal hydraulics
+                "unstable damping factor".to_owned()
             },
             ChemEngProcessControlSimulatorError::WrongTransferFnType => {
-                self.into()
+                "wrong transfer function type".to_owned()
+            },
+            ChemEngProcessControlSimulatorError::CsvError(err) => {
+                "csv error".to_owned()
             },
 
         }
