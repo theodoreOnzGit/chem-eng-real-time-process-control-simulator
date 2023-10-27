@@ -86,9 +86,9 @@ impl TransferFnTraits for TransferFnSecondOrder {
                     sine_decaying_sinusoid_.set_user_input_and_calc_output(
                         time, user_input)?;
 
-                    dbg!(sine_decaying_output);
-                    dbg!(cosine_decaying_output);
-                    dbg!(tf_no_zeroes_output);
+                    //dbg!(sine_decaying_output);
+                    //dbg!(cosine_decaying_output);
+                    //dbg!(tf_no_zeroes_output);
 
                     response += tf_no_zeroes_output;
                     response += cosine_decaying_output;
@@ -200,8 +200,9 @@ impl TransferFnSecondOrder {
 
         // let's make the decaying sinusoids first: 
 
-        let sine_coeff: Ratio = a1/a2;
-        let cosine_coeff: Ratio = -sine_coeff * (lambda - b1/a1)/omega;
+        let cosine_coeff: Ratio = a1/a2;
+        let sine_coeff: Ratio = -cosine_coeff * lambda/omega + 
+        b1/a2/omega;
 
         // now let's get the waveforms
 

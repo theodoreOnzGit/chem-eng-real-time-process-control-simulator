@@ -183,6 +183,8 @@ impl DecayingSinusoid {
                 |second_order_response|{
                     second_order_response.calculate_response(current_time)}
             ).sum();
+        //dbg!(summation_of_responses);
+        //dbg!(&self.response_vec);
 
         let output = self.offset + summation_of_responses;
 

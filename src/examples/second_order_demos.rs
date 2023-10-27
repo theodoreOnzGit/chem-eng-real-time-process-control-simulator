@@ -42,7 +42,7 @@ pub(crate) fn stable_second_order_simulation(){
     let b2: Time = Time::new::<second>(0.0007903);
     let c2: Ratio = Ratio::new::<ratio>(6.667e-7);
     let mut current_simulation_time: Time = Time::new::<second>(0.0);
-    let max_simulation_time: Time = Time::new::<second>(5.0e4 as f64);
+    let max_simulation_time: Time = Time::new::<second>(4.0e4 as f64);
     let timestep: Time = Time::new::<second>(200.0);
 
     let mut tf = TransferFnSecondOrder::new(a1, b1, c1, a2, b2, c2).unwrap();
@@ -77,7 +77,7 @@ pub(crate) fn stable_second_order_simulation(){
 
         let output = tf.set_user_input_and_calc(
             user_input,current_simulation_time).unwrap();
-        //dbg!(output);
+        dbg!(output);
         // for example
         assert_abs_diff_eq!(1.0,1.01, epsilon = 0.1);
         
