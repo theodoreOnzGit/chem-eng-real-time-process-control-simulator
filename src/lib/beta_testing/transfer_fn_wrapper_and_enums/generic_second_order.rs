@@ -1,8 +1,6 @@
 use uom::si::{f64::*, Quantity, Dimension, ISQ, SI};
 use uom::typenum::*;
 
-use crate::beta_testing::TimeSquaredChemEProcessControl;
-
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub enum SecondOrder {
     Stable,
@@ -29,10 +27,10 @@ impl SecondOrder {
     /// a2 s^2 + b2 s + c2
     ///
     ///
-    /// Unfortunately, uom does not allow for a time^2 unit yet,
-    /// So I'm using frequency_drift as a substitute and placeholder
-    /// and you'll have to provide a1inverse and a2inverse
-    /// rather than a1 and a2
+    /// Unfortunately, uom does not have a time^2 unit yet,
+    /// So I'm using the manual way:
+    /// This is how one writes a time squared unit
+    /// Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>
     /// 
     pub fn new(a1: Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>,
     b1: Time,

@@ -11,16 +11,16 @@ pub(crate) fn stable_second_order(){
 
     use uom::si::{Quantity, ISQ, SI};
     use uom::typenum::*;
-    type TimeSquaredChemEProcessControl = 
+    type TimeSquared = 
     Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>;
 
-    let a1: TimeSquaredChemEProcessControl = 
+    let a1: TimeSquared = 
     FrequencyDrift::new::<hertz_per_second>(1.0).recip();
     let b1: Time = Time::new::<second>(1.0);
     let c1: Ratio = Ratio::new::<ratio>(1.0);
 
     let a2: 
-    TimeSquaredChemEProcessControl = FrequencyDrift::new::<hertz_per_second>(2.0).recip();
+    TimeSquared = FrequencyDrift::new::<hertz_per_second>(2.0).recip();
     let b2: Time = Time::new::<second>(2.0);
     let c2: Ratio = Ratio::new::<ratio>(2.0);
     let mut current_simulation_time: Time = Time::new::<second>(0.0);
