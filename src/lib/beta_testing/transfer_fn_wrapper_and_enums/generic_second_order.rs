@@ -115,7 +115,7 @@ impl TransferFnTraits for TransferFnSecondOrder {
             TransferFnSecondOrder::Unstable => todo!(),
             TransferFnSecondOrder::Undamped => todo!(),
         }
-        let mut wtr = Writer::from_path(title_string)?;
+        let wtr = Writer::from_path(title_string)?;
         Ok(wtr)
     }
 
@@ -132,7 +132,9 @@ impl TransferFnTraits for TransferFnSecondOrder {
 
         wtr.write_record(&[current_time_string,
             input_string,
-            output_string,])?;
+            output_string])?;
+
+        wtr.flush().unwrap();
 
         Ok(())
     }

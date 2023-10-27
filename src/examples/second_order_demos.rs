@@ -2,6 +2,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 
 use chem_eng_real_time_process_control_simulator::beta_testing::prelude::*;
+use csv::Writer;
 use uom::ConstZero;
 use uom::si::f64::*;
 use uom::si::ratio::ratio;
@@ -58,9 +59,9 @@ pub(crate) fn stable_second_order_simulation(){
 
     let mut user_input = Ratio::ZERO;
 
-    // writer, users will create his or her own writer 
+    // writer creation
 
-
+    let mut wtr = tf.spawn_writer("demo_".to_string()).unwrap();
 
     let stuff_to_do_in_simulation_loop = move ||{
 
@@ -78,11 +79,23 @@ pub(crate) fn stable_second_order_simulation(){
             user_input = Ratio::new::<ratio>(9.0);
         }
 
-        let _output = tf.set_user_input_and_calc(
+        let output = tf.set_user_input_and_calc(
             user_input,current_simulation_time).unwrap();
         //dbg!(output);
-        // for example
+        // assert example
         assert_abs_diff_eq!(1.0,1.01, epsilon = 0.1);
+        let writer_borrow = &mut wtr;
+        tf.csv_write_values(writer_borrow, current_simulation_time, 
+            user_input, output).unwrap();
+        //let current_time_string = current_simulation_time.get::<second>().to_string();
+        //let input_string = user_input.get::<ratio>().to_string();
+        //let output_string = output.get::<ratio>().to_string();
+
+        
+        //wtr.write_record(&[current_time_string,
+        //    input_string,
+        //    output_string]).unwrap();
+        //wtr.flush().unwrap();
         
         current_simulation_time += timestep;
     };
