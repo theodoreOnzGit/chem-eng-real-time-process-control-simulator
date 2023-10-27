@@ -1,7 +1,7 @@
 use uom::si::{f64::*, Quantity, Dimension, ISQ, SI};
 use uom::typenum::*;
 
-use crate::beta_testing::TimeSquared;
+use crate::beta_testing::TimeSquaredChemEProcessControl;
 
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub enum SecondOrder {
@@ -34,10 +34,10 @@ impl SecondOrder {
     /// and you'll have to provide a1inverse and a2inverse
     /// rather than a1 and a2
     /// 
-    pub fn new(a1: TimeSquared,
+    pub fn new(a1: TimeSquaredChemEProcessControl,
     b1: Time,
     c1: Ratio,
-    a2: TimeSquared,
+    a2: TimeSquaredChemEProcessControl,
     b2: Time,
     c2: Ratio){
 

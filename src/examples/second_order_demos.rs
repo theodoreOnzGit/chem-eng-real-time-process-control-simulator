@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
 use std::thread;
 
+use chem_eng_real_time_process_control_simulator::beta_testing::TimeSquaredChemEProcessControl;
 use uom::si::f64::*;
 use uom::si::frequency::hertz;
 use uom::si::frequency_drift::hertz_per_second;
@@ -10,11 +11,13 @@ use uom::si::time::{second, millisecond};
 pub(crate) fn stable_second_order(){
 
 
-    let a1inverse: FrequencyDrift = FrequencyDrift::new::<hertz_per_second>(1.0);
+    let a1: TimeSquaredChemEProcessControl = 
+    FrequencyDrift::new::<hertz_per_second>(1.0).recip();
     let b1: Time = Time::new::<second>(1.0);
     let c1: Ratio = Ratio::new::<ratio>(1.0);
 
-    let a2inverse: FrequencyDrift = FrequencyDrift::new::<hertz_per_second>(2.0);
+    let a2: 
+    TimeSquaredChemEProcessControl = FrequencyDrift::new::<hertz_per_second>(2.0).recip();
     let b2: Time = Time::new::<second>(2.0);
     let c2: Ratio = Ratio::new::<ratio>(2.0);
     let mut current_simulation_time: Time = Time::new::<second>(0.0);
