@@ -7,6 +7,8 @@ use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
 use crate::beta_testing::stable_transfer_functions::decaying_sinusoid::DecayingSinusoid;
 use crate::beta_testing::stable_transfer_functions::second_order_transfer_fn::SecondOrderStableTransferFnNoZeroes;
 
+use super::TransferFn;
+
 /// an enum describing second order systems 
 /// you are meant to put in:
 ///
@@ -190,3 +192,58 @@ impl SecondOrder {
 }
 
 
+#[cfg(test)]
+fn test_dead_time(){
+    use uom::si::time::second;
+    use uom::si::time::millisecond;
+    use uom::si::frequency_drift::hertz_per_second;
+
+    use crate::beta_testing::transfer_fn_wrapper_and_enums::TransferFn;
+
+
+    /// G(s) = exp(-5s)
+    ///
+    /// 4 s^2 + 5 s + 6
+    /// ------------------
+    /// a2 s^2 + b2 s + c2
+    type TimeSquared = 
+    Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>;
+
+    let a1: TimeSquared = 
+    FrequencyDrift::new::<hertz_per_second>(1.0).recip();
+    let b1: Time = Time::new::<second>(1.0);
+    let c1: Ratio = Ratio::new::<ratio>(1.0);
+
+    let a2: 
+    TimeSquared = FrequencyDrift::new::<hertz_per_second>(2.0).recip();
+    let b2: Time = Time::new::<second>(2.0);
+    let c2: Ratio = Ratio::new::<ratio>(2.0);
+    let mut current_simulation_time: Time = Time::new::<second>(0.0);
+    let max_simulation_time: Time = Time::new::<second>(60.0);
+    let timestep: Time = Time::new::<millisecond>(60.0);
+
+    //let tf = TransferFn::SecondOrder::new(a1,b1,c1,a2,b2,c2);
+
+}
+
+impl Into<TransferFn> for SecondOrder {
+    fn into(self) -> TransferFn {
+        TransferFn::SecondOrderTransferFn(self)
+    }
+}
+
+impl TryFrom<TransferFn> for SecondOrder {
+    type Error = ChemEngProcessControlSimulatorError;
+    fn try_from(generic_transfer_function: TransferFn) 
+    -> Result<Self, Self::Error> {
+
+        if let TransferFn::SecondOrderTransferFn(
+        second_order) = generic_transfer_function {
+            return Ok(second_order);
+        } else {
+            return Err(ChemEngProcessControlSimulatorError::WrongTransferFnType);
+        };
+
+
+    }
+}

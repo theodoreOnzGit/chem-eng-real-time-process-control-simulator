@@ -15,6 +15,9 @@ pub enum ChemEngProcessControlSimulatorError {
     #[error("Unstable Damping Factor for Stable Transfer Function")]
     UnstableDampingFactorForStableTransferFunction,
 
+    #[error("wrong transfer function type")]
+    WrongTransferFnType,
+
 
     
 }
@@ -35,8 +38,13 @@ impl Into<String> for ChemEngProcessControlSimulatorError {
             ChemEngProcessControlSimulatorError::UnstableDampingFactorForStableTransferFunction => {
                 self.into()
             },
+            ChemEngProcessControlSimulatorError::WrongTransferFnType => {
+                self.into()
+            },
 
         }
+
+
     }
 }
 

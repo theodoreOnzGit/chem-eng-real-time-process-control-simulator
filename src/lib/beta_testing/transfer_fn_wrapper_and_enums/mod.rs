@@ -1,8 +1,8 @@
 /// generic enum for a Transfer Function
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub enum TransferFn {
-    FirstOrder,
-    SecondOrder,
+    FirstOrderTransferFn,
+    SecondOrderTransferFn(SecondOrder),
 }
 
 impl Default for TransferFn {
@@ -10,6 +10,8 @@ impl Default for TransferFn {
         todo!();
     }
 }
+
+
 
 pub mod generic_second_order;
 pub use generic_second_order::SecondOrder;
