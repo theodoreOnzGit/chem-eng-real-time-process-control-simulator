@@ -28,7 +28,8 @@ impl TransferFnTraits for TransferFn {
 
     fn set_user_input_and_calc(&mut self, 
         user_input: Ratio,
-        time_of_input: Time) -> Ratio {
+        time_of_input: Time) -> 
+    Result<Ratio, ChemEngProcessControlSimulatorError> {
         match self {
             TransferFn::FirstOrder => todo!(),
             TransferFn::SecondOrder(second_order) => {
@@ -45,12 +46,15 @@ pub trait TransferFnTraits {
     fn csv_plot(&self);
     fn set_user_input_and_calc(&mut self, 
         user_input: Ratio,
-        time_of_input: Time) -> Ratio;
+        time_of_input: Time) -> Result<Ratio, 
+    ChemEngProcessControlSimulatorError>;
 
 }
 
 
 pub mod generic_second_order;
 pub use generic_second_order::TransferFnSecondOrder;
+
+use super::errors::ChemEngProcessControlSimulatorError;
 
 

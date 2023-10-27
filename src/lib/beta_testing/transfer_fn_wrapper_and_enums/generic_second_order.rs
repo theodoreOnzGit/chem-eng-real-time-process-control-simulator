@@ -66,8 +66,9 @@ impl TransferFnTraits for TransferFnSecondOrder {
     }
 
     fn set_user_input_and_calc(&mut self, user_input: Ratio,
-        time: Time) -> Ratio {
-        
+        time: Time) -> 
+    Result<Ratio, ChemEngProcessControlSimulatorError> {
+
         todo!()
     }
 }
@@ -201,7 +202,6 @@ impl TransferFnSecondOrder {
 #[test]
 pub fn test_dead_time(){
     use uom::si::time::second;
-    use uom::si::time::millisecond;
     use uom::si::frequency_drift::hertz_per_second;
     use uom::si::{Quantity, ISQ, SI};
     use uom::typenum::*;
@@ -224,9 +224,6 @@ pub fn test_dead_time(){
     TimeSquared = FrequencyDrift::new::<hertz_per_second>(1.0).recip();
     let b2: Time = Time::new::<second>(1.0);
     let c2: Ratio = Ratio::new::<ratio>(2.0);
-    let mut current_simulation_time: Time = Time::new::<second>(0.0);
-    let max_simulation_time: Time = Time::new::<second>(60.0);
-    let timestep: Time = Time::new::<millisecond>(60.0);
 
     let mut tf: TransferFn = 
     TransferFnSecondOrder::new(a1, b1, c1, a2, b2, c2).unwrap().into();
