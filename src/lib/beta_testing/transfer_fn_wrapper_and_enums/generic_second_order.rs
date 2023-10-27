@@ -76,12 +76,24 @@ impl TransferFnTraits for TransferFnSecondOrder {
                 sine_decaying_sinusoid_) => {
                     let mut response: Ratio = Ratio::ZERO;
 
-                    response += tf_no_zeroes.set_user_input_and_calc_output(
+                    let tf_no_zeroes_output = 
+                    tf_no_zeroes.set_user_input_and_calc_output(
                         time, user_input)?;
-                    response += cosine_decaying_sinusoid.set_user_input_and_calc_output(
+                    let cosine_decaying_output = 
+                    cosine_decaying_sinusoid.set_user_input_and_calc_output(
                         time, user_input)?;
-                    response += sine_decaying_sinusoid_.set_user_input_and_calc_output(
+                    let sine_decaying_output = 
+                    sine_decaying_sinusoid_.set_user_input_and_calc_output(
                         time, user_input)?;
+
+                    dbg!(sine_decaying_output);
+                    dbg!(cosine_decaying_output);
+                    dbg!(tf_no_zeroes_output);
+
+                    response += tf_no_zeroes_output;
+                    response += cosine_decaying_output;
+                    response += sine_decaying_output;
+                    return Ok(response);
 
                 },
             TransferFnSecondOrder::StableCriticallydamped => todo!(),
