@@ -1,6 +1,8 @@
 use uom::si::{f64::*, Quantity, Dimension, ISQ, SI};
 use uom::typenum::*;
 
+use crate::beta_testing::TimeSquared;
+
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub enum SecondOrder {
     Stable,
@@ -32,10 +34,10 @@ impl SecondOrder {
     /// This is how one writes a time squared unit
     /// Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>
     /// 
-    pub fn new(a1: Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>,
+    pub fn new(a1: TimeSquared,
     b1: Time,
     c1: Ratio,
-    a2: Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>,
+    a2: TimeSquared,
     b2: Time,
     c2: Ratio){
 
