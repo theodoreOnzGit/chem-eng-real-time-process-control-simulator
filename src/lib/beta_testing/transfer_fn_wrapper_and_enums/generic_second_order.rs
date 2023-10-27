@@ -250,7 +250,7 @@ impl TransferFnSecondOrder {
             Time::ZERO, 
             omega)?;
 
-        let sine_term: DecayingSinusoid = DecayingSinusoid::new_cosine(
+        let sine_term: DecayingSinusoid = DecayingSinusoid::new_sine(
             sine_coeff, 
             lambda, 
             Ratio::ZERO, 
