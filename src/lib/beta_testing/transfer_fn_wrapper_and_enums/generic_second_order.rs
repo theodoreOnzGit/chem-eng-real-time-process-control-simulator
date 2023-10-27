@@ -1,3 +1,4 @@
+use uom::si::ratio::ratio;
 use uom::si::{f64::*, Quantity, Dimension, ISQ, SI};
 use uom::{typenum::*, ConstZero};
 
@@ -47,7 +48,7 @@ impl SecondOrder {
     c1: Ratio,
     a2: TimeSquared,
     b2: Time,
-    c2: Ratio) -> Self {
+    c2: Ratio) -> Result<Self,ChemEngProcessControlSimulatorError> {
 
         // process time 
         let tau_p: Time = (a2/c2).sqrt();
@@ -64,6 +65,24 @@ impl SecondOrder {
 
         // angular frequency for decaying sinusoids
         let omega: Frequency = (c2/a2 - 0.25*b2*b2/a2/a2).sqrt();
+
+        let zeta_value: f64 = zeta.get::<ratio>();
+
+        if zeta_value < 0.0 {
+            // unstable system
+            todo!();
+        } else if zeta_value < 1.0 {
+
+        } else if zeta_value == 1.0 {
+            // undamped system
+            return Self::new_underdamped_stable_system(tau_p, 
+                zeta, 
+                k_p, lambda, omega, a1, a2, b1, b2);
+        } else if zeta_value > 1.0 {
+            
+            // overdamped system
+            todo!();
+        }
 
         todo!()
 
