@@ -7,10 +7,23 @@ use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
 use crate::beta_testing::stable_transfer_functions::decaying_sinusoid::DecayingSinusoid;
 use crate::beta_testing::stable_transfer_functions::second_order_transfer_fn::SecondOrderStableTransferFnNoZeroes;
 
+/// an enum describing second order systems 
+/// you are meant to put in:
+///
+/// G(s) = 
+///
+/// a1 s^2 + b1 s + c1
+/// ------------------
+/// a2 s^2 + b2 s + c2
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub enum SecondOrder {
-    StableUnderdamped(SecondOrderStableTransferFnNoZeroes,
-    DecayingSinusoid,DecayingSinusoid),
+    /// this is arranged in the order
+    /// no_zero_transfer_fn,
+    /// cosine_term,
+    /// sine_term
+    StableUnderdamped(
+        SecondOrderStableTransferFnNoZeroes,
+        DecayingSinusoid,DecayingSinusoid),
     StableCriticallydamped,
     StableOverdamped,
     Unstable,
@@ -88,18 +101,24 @@ impl SecondOrder {
 
     }
 
-    pub fn set_initial_input(&mut self, initial_input: Ratio){
-
-        todo!()
-    }
-    pub fn set_initial_output(&mut self, initial_output: Ratio){
-
-        todo!()
-    }
-
     pub fn set_dead_time(&mut self, dead_time: Time){
 
-        todo!()
+        match self {
+            SecondOrder::StableUnderdamped(
+                transfer_fn_no_zeroes, 
+                cosine_term, 
+                sine_term) => {
+                    // have to test if this works correctly
+                    transfer_fn_no_zeroes.delay = dead_time;
+                    cosine_term.delay = dead_time;
+                    sine_term.delay = dead_time;
+
+            },
+            SecondOrder::StableCriticallydamped => todo!(),
+            SecondOrder::StableOverdamped => todo!(),
+            SecondOrder::Unstable => todo!(),
+            SecondOrder::Undamped => todo!(),
+        }
     }
 
     pub fn csv_plot(&self){
@@ -107,8 +126,9 @@ impl SecondOrder {
     }
 
     pub fn set_user_input_and_calc(&mut self, user_input: Ratio,
-        time: Time) {
+        time: Time) -> Ratio {
         
+        todo!()
     }
 
     // underdamped stable systems

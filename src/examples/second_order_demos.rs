@@ -35,8 +35,9 @@ pub(crate) fn stable_second_order(){
     // these inputs and outputs
     //
     // // do this before starting up
-    // tf.set_initial_output(initial_value);
-    // tf.set_initial_input(initial_value);
+    //
+    // // actually transfer functions work with deviation variables,
+    // // the initial input and output is always zero
     // tf.set_dead_time(initial_value);
     //
     let stuff_to_do_in_simulation_loop = move ||{
