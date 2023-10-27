@@ -55,7 +55,7 @@ impl SecondOrder {
         // angular frequency for decaying sinusoids
         let omega: Frequency = (c2/a2 - 0.25*b2*b2/a2/a2).sqrt();
 
-        let a: Quantity<ISQ<P2, P1, N2, Z0, N1, N1, Z0>, SI<f64>, f64>;
+
 
     }
 }
