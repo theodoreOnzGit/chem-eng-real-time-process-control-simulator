@@ -7,9 +7,11 @@ use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
 use crate::beta_testing::stable_transfer_functions::decaying_sinusoid::DecayingSinusoid;
 use crate::beta_testing::stable_transfer_functions::second_order_transfer_fn::SecondOrderStableTransferFnNoZeroes;
 
-use super::TransferFn;
+use super::{TransferFn, TransferFnTraits};
 
-/// an enum describing second order systems 
+/// an enum describing generic second order systems,
+/// only stable systems are implemented so far
+///
 /// you are meant to put in:
 ///
 /// G(s) = 
@@ -18,7 +20,7 @@ use super::TransferFn;
 /// ------------------
 /// a2 s^2 + b2 s + c2
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
-pub enum SecondOrder {
+pub enum TransferFnSecondOrder {
     /// this is arranged in the order
     /// no_zero_transfer_fn,
     /// cosine_term,
@@ -32,13 +34,45 @@ pub enum SecondOrder {
     Undamped,
 }
 
-impl Default for SecondOrder {
+impl Default for TransferFnSecondOrder {
     fn default() -> Self {
         todo!()
     }
 }
 
-impl SecondOrder {
+impl TransferFnTraits for TransferFnSecondOrder {
+    fn set_dead_time(&mut self, dead_time: Time){
+
+        match self {
+            TransferFnSecondOrder::StableUnderdamped(
+                transfer_fn_no_zeroes, 
+                cosine_term, 
+                sine_term) => {
+                    // have to test if this works correctly
+                    transfer_fn_no_zeroes.delay = dead_time;
+                    cosine_term.delay = dead_time;
+                    sine_term.delay = dead_time;
+
+            },
+            TransferFnSecondOrder::StableCriticallydamped => todo!(),
+            TransferFnSecondOrder::StableOverdamped => todo!(),
+            TransferFnSecondOrder::Unstable => todo!(),
+            TransferFnSecondOrder::Undamped => todo!(),
+        }
+    }
+
+    fn csv_plot(&self){
+        todo!()
+    }
+
+    fn set_user_input_and_calc(&mut self, user_input: Ratio,
+        time: Time) -> Ratio {
+        
+        todo!()
+    }
+}
+
+impl TransferFnSecondOrder {
 
 
     /// generic constructor based on polynomials
@@ -103,35 +137,6 @@ impl SecondOrder {
 
     }
 
-    pub fn set_dead_time(&mut self, dead_time: Time){
-
-        match self {
-            SecondOrder::StableUnderdamped(
-                transfer_fn_no_zeroes, 
-                cosine_term, 
-                sine_term) => {
-                    // have to test if this works correctly
-                    transfer_fn_no_zeroes.delay = dead_time;
-                    cosine_term.delay = dead_time;
-                    sine_term.delay = dead_time;
-
-            },
-            SecondOrder::StableCriticallydamped => todo!(),
-            SecondOrder::StableOverdamped => todo!(),
-            SecondOrder::Unstable => todo!(),
-            SecondOrder::Undamped => todo!(),
-        }
-    }
-
-    pub fn csv_plot(&self){
-        todo!()
-    }
-
-    pub fn set_user_input_and_calc(&mut self, user_input: Ratio,
-        time: Time) -> Ratio {
-        
-        todo!()
-    }
 
     // underdamped stable systems
     #[inline]
@@ -223,24 +228,25 @@ pub fn test_dead_time(){
     let timestep: Time = Time::new::<millisecond>(60.0);
 
     let tf: TransferFn = 
-    SecondOrder::new(a1, b1, c1, a2, b2, c2).unwrap().into();
+    TransferFnSecondOrder::new(a1, b1, c1, a2, b2, c2).unwrap().into();
 
-    dbg!(tf);
+    let dead_time = Time::new::<second>(5.0);
+
 
 }
 
-impl Into<TransferFn> for SecondOrder {
+impl Into<TransferFn> for TransferFnSecondOrder {
     fn into(self) -> TransferFn {
-        TransferFn::SecondOrderTransferFn(self)
+        TransferFn::SecondOrder(self)
     }
 }
 
-impl TryFrom<TransferFn> for SecondOrder {
+impl TryFrom<TransferFn> for TransferFnSecondOrder {
     type Error = ChemEngProcessControlSimulatorError;
     fn try_from(generic_transfer_function: TransferFn) 
     -> Result<Self, Self::Error> {
 
-        if let TransferFn::SecondOrderTransferFn(
+        if let TransferFn::SecondOrder(
         second_order) = generic_transfer_function {
             return Ok(second_order);
         } else {
