@@ -8,7 +8,10 @@ use crate::beta_testing::stable_transfer_functions::second_order_transfer_fn::Se
 
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub enum SecondOrder {
-    Stable,
+    StableUnderdamped(SecondOrderStableTransferFnNoZeroes,
+    DecayingSinusoid,DecayingSinusoid),
+    StableCriticallydamped,
+    StableOverdamped,
     Unstable,
     Undamped,
 }
@@ -95,7 +98,7 @@ impl SecondOrder {
         // underdamped systems will contain two decaying_sinusoid
         // types and one SecondOrderStableTransferFunction Type
         // 
-        let mut second_order_stable_transfer_fn_no_zeroes: 
+        let second_order_stable_transfer_fn_no_zeroes: 
         SecondOrderStableTransferFnNoZeroes = 
         SecondOrderStableTransferFnNoZeroes::new(k_p, 
             tau_p, 
@@ -108,7 +111,7 @@ impl SecondOrder {
         // let's make the decaying sinusoids first: 
 
         let sine_coeff: Ratio = a1/a2;
-        let cosine_coeff: Ratio = sine_coeff * (lambda - b1/a1)/omega;
+        let cosine_coeff: Ratio = -sine_coeff * (lambda - b1/a1)/omega;
 
         // now let's get the waveforms
 
@@ -128,7 +131,11 @@ impl SecondOrder {
             Time::ZERO, 
             omega)?;
 
-        todo!()
+        let underdamped_system = Self::StableUnderdamped(
+            second_order_stable_transfer_fn_no_zeroes, cosine_term,
+            sine_term);
+
+        return Ok(underdamped_system);
 
     }
 
