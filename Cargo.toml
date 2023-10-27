@@ -18,3 +18,12 @@ path = "src/main.rs"
 name = "chem_eng_real_time_process_control_simulator"
 path = "src/lib/lib.rs"
 
+
+
+# fast and small binary
+[profile.release]
+opt-level = 2 
+
+# Optimize all dependencies even in debug builds:
+[profile.dev.package."*"]
+opt-level = 2
