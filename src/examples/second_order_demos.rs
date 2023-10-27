@@ -31,7 +31,12 @@ pub(crate) fn stable_second_order(){
     //let tf = TransferFn::SecondOrder::new(a1, b1, c1, a2, b2, c2);
     //
     // if you need to set initial values
+    // because the transfer function only measures deviations from 
+    // these inputs and outputs
+    //
+    // // do this before starting up
     // tf.set_initial_output(initial_value);
+    // tf.set_initial_input(initial_value);
     //
     let stuff_to_do_in_simulation_loop = move ||{
 

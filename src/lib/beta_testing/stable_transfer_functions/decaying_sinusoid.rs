@@ -1,4 +1,4 @@
-use uom::si::{f64::*, time::second, frequency::hertz, ratio::ratio};
+use uom::{si::{f64::*, time::second, frequency::hertz, ratio::ratio}, ConstZero};
 
 use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
 
@@ -12,20 +12,20 @@ use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
 /// K_p is process gain (dimensionless, be careful)
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub struct DecayingSinusoid {
-    magnitude: f64,
+    pub(crate) magnitude: Ratio,
     /// decay frequency or 1/decay time
-    a: Frequency,
-    previous_timestep_input: f64,
+    pub(crate) a: Frequency,
+    pub(crate) previous_timestep_input: Ratio,
     /// oscillation frequency
-    omega: Frequency,
+    pub(crate) omega: Frequency,
     /// previous timestep output
-    offset: f64,
+    pub(crate) offset: Ratio,
     /// delay
-    delay: Time,
+    pub(crate) delay: Time,
     /// vector of first order responses 
-    response_vec: Vec<DecaySinusoidResponse>,
+    pub(crate) response_vec: Vec<DecaySinusoidResponse>,
     /// choose whether it's a sine or cosine,
-    sinusoid_type: TransferFnSinusoidType,
+    pub(crate) sinusoid_type: TransferFnSinusoidType,
 }
 
 #[derive(Debug,PartialEq, PartialOrd, Clone, Copy)]
@@ -42,10 +42,10 @@ impl Default for DecayingSinusoid {
     /// frequency in hertz
     fn default() -> Self {
         DecayingSinusoid 
-            { magnitude: 1.0, 
+            { magnitude: Ratio::new::<ratio>(1.0), 
             a: Frequency::new::<hertz>(1.0), 
-            previous_timestep_input: 0.0, 
-            offset: 0.0, 
+            previous_timestep_input: Ratio::ZERO, 
+            offset: Ratio::ZERO, 
             delay: Time::new::<second>(0.0), 
             response_vec: vec![],
             omega: Frequency::new::<hertz>(1.0),
@@ -57,10 +57,10 @@ impl Default for DecayingSinusoid {
 impl DecayingSinusoid {
 
     /// constructors 
-    pub fn new_sine(magnitude: f64,
+    pub fn new_sine(magnitude: Ratio,
         decay_frequency: Frequency,
-        initial_input: f64,
-        initial_value: f64,
+        initial_input: Ratio,
+        initial_value: Ratio,
         delay: Time, omega:Frequency) -> Result<Self, ChemEngProcessControlSimulatorError> {
 
         // if damping factor is less than or equal 
@@ -91,10 +91,10 @@ impl DecayingSinusoid {
     }
 
 
-    pub fn new_cosine(magnitude: f64,
+    pub fn new_cosine(magnitude: Ratio,
         decay_frequency: Frequency,
-        initial_input: f64,
-        initial_value: f64,
+        initial_input: Ratio,
+        initial_value: Ratio,
         delay: Time, omega:Frequency) -> Result<Self, ChemEngProcessControlSimulatorError> {
 
         if decay_frequency.value <= 0.0 {
@@ -123,15 +123,16 @@ impl DecayingSinusoid {
     /// sets the user input to some value
     pub fn set_user_input_and_calc_output(&mut self, 
         current_time: Time,
-        current_input: f64) 
-    -> Result<f64,ChemEngProcessControlSimulatorError> {
+        current_input: Ratio) 
+    -> Result<Ratio,ChemEngProcessControlSimulatorError> {
         // check if input is equal to current input 
 
         // case where input is not the same to 9 decimal places
 
         let input_changed: bool = 
-        (current_input * 1e9).round() 
-        - (self.previous_timestep_input.clone()*1e9).round() != 0.0 ;
+        (current_input.get::<ratio>() * 1e9).round() 
+        - (self.previous_timestep_input.clone().get::<ratio>()*1e9).round() 
+        != 0.0 ;
 
         if input_changed {
             // need to add a response to the vector
@@ -177,7 +178,7 @@ impl DecayingSinusoid {
         // + offset
         // first we add the offset
 
-        let summation_of_responses: f64 = self.response_vec.
+        let summation_of_responses: Ratio = self.response_vec.
             iter_mut().map(
                 |second_order_response|{
                     second_order_response.calculate_response(current_time)}
@@ -286,10 +287,10 @@ impl DecayingSinusoid {
 /// overdamped stable systems
 #[derive(Debug,PartialEq, PartialOrd, Clone, Copy)]
 pub struct DecaySinusoidResponse {
-    magnitude: f64,
+    magnitude: Ratio,
     a: Frequency,
     start_time: Time,
-    user_input: f64,
+    user_input: Ratio,
     current_time: Time,
     omega: Frequency,
     sinusoid_type: TransferFnSinusoidType,
@@ -302,10 +303,10 @@ impl Default for DecaySinusoidResponse {
     /// frequency in hertz
     fn default() -> Self {
         DecaySinusoidResponse { 
-            magnitude: 1.0, 
+            magnitude: Ratio::new::<ratio>(1.0), 
             a: Frequency::new::<hertz>(1.0), 
             start_time: Time::new::<second>(0.0), 
-            user_input: 1.0, 
+            user_input: Ratio::new::<ratio>(1.0), 
             current_time: Time::new::<second>(0.0),
             omega: Frequency::new::<hertz>(1.0),
             sinusoid_type: TransferFnSinusoidType::Sine,
@@ -318,10 +319,10 @@ impl DecaySinusoidResponse {
 
     /// constructor 
     pub fn new(
-        magnitude: f64,
+        magnitude: Ratio,
         a: Frequency,
         start_time: Time,
-        user_input: f64,
+        user_input: Ratio,
         current_time: Time,
         omega: Frequency,
         sinusoid_type: TransferFnSinusoidType) -> Result<Self,ChemEngProcessControlSimulatorError> {
@@ -368,7 +369,7 @@ impl DecaySinusoidResponse {
 
     /// calculates the response of the second order system
     /// at a given time
-    pub fn calculate_response(&mut self, simulation_time: Time) -> f64 {
+    pub fn calculate_response(&mut self, simulation_time: Time) -> Ratio {
 
         // get the current time (t - t0)
         self.current_time = simulation_time;
@@ -381,12 +382,12 @@ impl DecaySinusoidResponse {
         // if the current time is before start time, no response 
         // from this transfer function
         if !heaviside_on {
-            return 0.0;
+            return Ratio::ZERO;
         }
 
 
 
-        let response: f64;
+        let response: Ratio;
         let at: Ratio = time_elapsed *  self.a;
         let at: f64 = at.get::<ratio>();
         let omega_t: Ratio = time_elapsed * self.omega;
@@ -413,8 +414,8 @@ impl DecaySinusoidResponse {
 
     /// steady state value 
     /// of a decaying sinusoid is zero
-    pub fn steady_state_value(&self) -> f64 {
-        let response: f64 = 0.0;
+    pub fn steady_state_value(&self) -> Ratio {
+        let response: Ratio = Ratio::ZERO;
         response
     }
 }

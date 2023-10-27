@@ -14,14 +14,14 @@ use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
 /// no zeroes are expected here in this transfer fn
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub struct SecondOrderStableTransferFnNoZeroes {
-    process_gain: Ratio,
-    process_time: Time,
-    previous_timestep_input: Ratio,
-    damping_factor: Ratio,
+    pub(crate) process_gain: Ratio,
+    pub(crate) process_time: Time,
+    pub(crate) previous_timestep_input: Ratio,
+    pub(crate) damping_factor: Ratio,
     /// previous timestep output
-    offset: Ratio,
+    pub(crate) offset: Ratio,
     /// delay
-    delay: Time,
+    pub(crate) delay: Time,
 
     /// vector of first order responses 
     response_vec: Vec<SecondOrderStableStepResponse>,

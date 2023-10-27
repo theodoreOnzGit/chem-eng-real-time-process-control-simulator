@@ -55,7 +55,7 @@ impl SecondOrder {
         let k_p: Ratio = c1/c2;
 
         // decay constant 
-        let lambda = 0.5 *b2/a2;
+        let lambda: Frequency = 0.5 *b2/a2;
 
         // angular frequency for decaying sinusoids
         let omega: Frequency = (c2/a2 - 0.25*b2*b2/a2/a2).sqrt();
@@ -64,9 +64,26 @@ impl SecondOrder {
 
     }
 
+    pub fn set_initial_input(&mut self, initial_input: Ratio){
+
+        todo!()
+    }
+    pub fn set_initial_output(&mut self, initial_output: Ratio){
+
+        todo!()
+    }
+
     // underdamped stable systems
     #[inline]
-    fn new_underdamped_stable_system(){
+    fn new_underdamped_stable_system(tau_p: Time,
+        zeta: Ratio,
+        k_p: Ratio,
+        lambda: Frequency,
+        omega: Frequency,
+        a1: TimeSquared,
+        a2: TimeSquared,
+        b1: Time,
+        b2: Time){
 
         // underdamped systems will contain two decaying_sinusoid
         // types and one SecondOrderStableTransferFunction Type
