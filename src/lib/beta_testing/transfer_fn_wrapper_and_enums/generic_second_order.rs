@@ -2,6 +2,7 @@ use uom::si::{f64::*, Quantity, Dimension, ISQ, SI};
 use uom::typenum::*;
 
 use crate::beta_testing::TimeSquared;
+use crate::beta_testing::stable_transfer_functions::second_order_transfer_fn::SecondOrderStableTransferFnNoZeroes;
 
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub enum SecondOrder {
@@ -66,6 +67,14 @@ impl SecondOrder {
     // underdamped stable systems
     #[inline]
     fn new_underdamped_stable_system(){
+
+        // underdamped systems will contain two decaying_sinusoid
+        // types and one SecondOrderStableTransferFunction Type
+        // 
+        let mut second_order_stable_transfer_fn_no_zeroes: 
+        SecondOrderStableTransferFnNoZeroes;
+
+
 
     }
 

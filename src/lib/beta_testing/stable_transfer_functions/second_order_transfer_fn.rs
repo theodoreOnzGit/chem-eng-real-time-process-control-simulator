@@ -10,8 +10,10 @@ use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
 /// tau is process time 
 /// zeta is damping factor 
 /// K_p is process gain (dimensionless, be careful)
+///
+/// no zeroes are expected here in this transfer fn
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
-pub struct SecondOrderStableTransferFn {
+pub struct SecondOrderStableTransferFnNoZeroes {
     process_gain: Ratio,
     process_time: Time,
     previous_timestep_input: Ratio,
@@ -25,7 +27,7 @@ pub struct SecondOrderStableTransferFn {
     response_vec: Vec<SecondOrderStableStepResponse>,
 }
 
-impl Default for SecondOrderStableTransferFn {
+impl Default for SecondOrderStableTransferFnNoZeroes {
     /// default is: 
     ///
     /// 1 / (s^2 + 2s + 1)
@@ -36,7 +38,7 @@ impl Default for SecondOrderStableTransferFn {
     /// with initial user input of 0.0 
     /// and initial user value of 0.0
     fn default() -> Self {
-        SecondOrderStableTransferFn { 
+        SecondOrderStableTransferFnNoZeroes { 
             process_gain: Ratio::new::<ratio>(1.0), 
             process_time: Time::new::<second>(1.0), 
             previous_timestep_input: Ratio::ZERO, 
@@ -48,7 +50,7 @@ impl Default for SecondOrderStableTransferFn {
     }
 }
 
-impl SecondOrderStableTransferFn {
+impl SecondOrderStableTransferFnNoZeroes {
 
     /// constructors 
     pub fn new(process_gain: Ratio,
@@ -65,7 +67,7 @@ impl SecondOrderStableTransferFn {
                 UnstableDampingFactorForStableTransferFunction);
         }
 
-        Ok(SecondOrderStableTransferFn { 
+        Ok(SecondOrderStableTransferFnNoZeroes { 
             process_gain, 
             process_time, 
             previous_timestep_input: initial_input, 
