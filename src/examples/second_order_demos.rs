@@ -7,27 +7,39 @@ use uom::si::frequency_drift::hertz_per_second;
 use uom::si::ratio::ratio;
 use uom::si::time::{second, millisecond};
 
-
 pub(crate) fn stable_second_order(){
 
 
-    let a1: FrequencyDrift = FrequencyDrift::new::<hertz_per_second>(1.0);
-    let b1: Frequency = Frequency::new::<hertz>(1.0);
+    let a1inverse: FrequencyDrift = FrequencyDrift::new::<hertz_per_second>(1.0);
+    let b1: Time = Time::new::<second>(1.0);
     let c1: Ratio = Ratio::new::<ratio>(1.0);
 
-    let a2: FrequencyDrift = FrequencyDrift::new::<hertz_per_second>(2.0);
-    let b2: Frequency = Frequency::new::<hertz>(2.0);
+    let a2inverse: FrequencyDrift = FrequencyDrift::new::<hertz_per_second>(2.0);
+    let b2: Time = Time::new::<second>(2.0);
     let c2: Ratio = Ratio::new::<ratio>(2.0);
     let mut current_simulation_time: Time = Time::new::<second>(0.0);
     let max_simulation_time: Time = Time::new::<second>(60.0);
     let timestep: Time = Time::new::<millisecond>(60.0);
 
-
     //let tf = TransferFn::SecondOrder::new(a1, b1, c1, a2, b2, c2);
+    //
+    // if you need to set initial values
+    // tf.set_initial_output(initial_value);
     //
     let stuff_to_do_in_simulation_loop = move ||{
 
-        // transferfn.set_user_input_and_calc(user_input,time);
+        // let _output = tf.set_user_input_and_calc(user_input,time);
+        // tf.csv_plot();
+        //
+        // probably want to assert something as well
+        // assert approx equal 
+
+        // should be equal within x percent of a suitable scale
+        // so lets say 1e-9 times of 1,
+
+        // for example
+        assert_abs_diff_eq!(1.0,1.01, epsilon = 0.1);
+        
         current_simulation_time += timestep;
     };
 
