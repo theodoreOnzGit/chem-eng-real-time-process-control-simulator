@@ -7,12 +7,13 @@ pub mod transfer_fn_wrapper_and_enums;
 
 
 // Time squared unit for use in second order functions
-use uom::si::{Quantity, ISQ, SI};
-use uom::typenum::*;
-pub type TimeSquaredChemEProcessControl = Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>;
 
 #[cfg(test)]
 pub fn timesq_test (){
+    use uom::si::{Quantity, ISQ, SI};
+    use uom::typenum::*;
+    type TimeSquaredChemEProcessControl = 
+    Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>;
     // this just tests the time squared unit
     use uom::si::{time::second, f64::Time};
 

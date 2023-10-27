@@ -34,10 +34,10 @@ impl SecondOrder {
     /// and you'll have to provide a1inverse and a2inverse
     /// rather than a1 and a2
     /// 
-    pub fn new(a1: TimeSquaredChemEProcessControl,
+    pub fn new(a1: Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>,
     b1: Time,
     c1: Ratio,
-    a2: TimeSquaredChemEProcessControl,
+    a2: Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>,
     b2: Time,
     c2: Ratio){
 
