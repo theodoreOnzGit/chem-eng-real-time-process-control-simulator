@@ -2,7 +2,6 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 
 use chem_eng_real_time_process_control_simulator::beta_testing::prelude::*;
-use csv::Writer;
 use uom::ConstZero;
 use uom::si::f64::*;
 use uom::si::ratio::ratio;
