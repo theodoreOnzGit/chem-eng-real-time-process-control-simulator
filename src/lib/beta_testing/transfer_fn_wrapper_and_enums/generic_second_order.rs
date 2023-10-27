@@ -234,6 +234,16 @@ pub fn test_dead_time(){
     let dead_time = Time::new::<second>(5.0);
     tf.set_dead_time(dead_time);
 
+    // i need to match two enums, but I'm only going to use if let
+    if let TransferFn::SecondOrder(second_order) = tf {
+        if let TransferFnSecondOrder::StableUnderdamped(
+        tf_no_zeroes, cosine_sinusoidal_decay, sine_sinusoidal_decay) = second_order {
+            assert_eq!(tf_no_zeroes.delay, dead_time);
+            assert_eq!(cosine_sinusoidal_decay.delay, dead_time);
+            assert_eq!(sine_sinusoidal_decay.delay, dead_time);
+        }
+    }
+
 
 }
 
