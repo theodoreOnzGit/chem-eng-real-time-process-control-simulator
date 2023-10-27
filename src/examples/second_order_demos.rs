@@ -11,6 +11,7 @@ pub(crate) fn stable_second_order(){
 
     use uom::si::{Quantity, ISQ, SI};
     use uom::typenum::*;
+    // type alias called TimeSquared
     type TimeSquared = 
     Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>;
 

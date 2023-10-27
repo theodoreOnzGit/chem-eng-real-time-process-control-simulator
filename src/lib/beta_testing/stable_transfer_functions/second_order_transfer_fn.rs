@@ -1,4 +1,4 @@
-use uom::si::{f64::*, time::second};
+use uom::{si::{f64::*, time::second, ratio::ratio}, ConstZero};
 
 use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
 
@@ -12,12 +12,12 @@ use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
 /// K_p is process gain (dimensionless, be careful)
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub struct SecondOrderStableTransferFn {
-    process_gain: f64,
+    process_gain: Ratio,
     process_time: Time,
-    previous_timestep_input: f64,
-    damping_factor: f64,
+    previous_timestep_input: Ratio,
+    damping_factor: Ratio,
     /// previous timestep output
-    offset: f64,
+    offset: Ratio,
     /// delay
     delay: Time,
 
@@ -37,13 +37,13 @@ impl Default for SecondOrderStableTransferFn {
     /// and initial user value of 0.0
     fn default() -> Self {
         SecondOrderStableTransferFn { 
-            process_gain: 1.0, 
+            process_gain: Ratio::new::<ratio>(1.0), 
             process_time: Time::new::<second>(1.0), 
-            previous_timestep_input: 0.0, 
-            offset: 0.0, 
+            previous_timestep_input: Ratio::ZERO, 
+            offset: Ratio::ZERO, 
             delay: Time::new::<second>(0.0), 
             response_vec: vec![],
-            damping_factor: 1.0,
+            damping_factor: Ratio::new::<ratio>(1.0),
         }
     }
 }
@@ -51,16 +51,16 @@ impl Default for SecondOrderStableTransferFn {
 impl SecondOrderStableTransferFn {
 
     /// constructors 
-    pub fn new(process_gain: f64,
+    pub fn new(process_gain: Ratio,
         process_time: Time,
-        damping_factor: f64,
-        initial_input: f64,
-        initial_value: f64,
+        damping_factor: Ratio,
+        initial_input: Ratio,
+        initial_value: Ratio,
         delay: Time,) -> Result<Self, ChemEngProcessControlSimulatorError> {
 
         // if damping factor is less than or equal 0, it is unstable
 
-        if damping_factor <= 0.0 {
+        if damping_factor.value <= 0.0 {
             return Err(ChemEngProcessControlSimulatorError::
                 UnstableDampingFactorForStableTransferFunction);
         }
@@ -76,34 +76,21 @@ impl SecondOrderStableTransferFn {
         })
     }
 
-    /// second order filter 
-    /// the system will be critically damped
-    pub fn new_filter(process_time: Time,
-        initial_input: f64,
-        initial_value: f64) -> Self {
-        SecondOrderStableTransferFn { 
-            process_gain: 1.0, 
-            process_time, 
-            previous_timestep_input: initial_input, 
-            offset: initial_value, 
-            delay: Time::new::<second>(0.0), 
-            response_vec: vec![],
-            damping_factor: 0.5,
-        }
-    }
 
     /// sets the user input to some value
     pub fn set_user_input_and_calc_output(&mut self, 
         current_time: Time,
-        current_input: f64) 
-    -> Result<f64, ChemEngProcessControlSimulatorError> {
+        current_input: Ratio) 
+    -> Result<Ratio, ChemEngProcessControlSimulatorError> {
         // check if input is equal to current input 
 
         // case where input is not the same to 9 decimal places
 
         let input_changed: bool = 
-            (current_input * 1e9).round() 
-            - (self.previous_timestep_input.clone()*1e9).round() != 0.0 ;
+        (current_input.get::<ratio>() * 1e9).round() 
+        - (self.previous_timestep_input.clone().get::<ratio>()
+            *1e9).round() != 
+        0.0 ;
 
         if input_changed {
             // need to add a response to the vector
@@ -147,7 +134,7 @@ impl SecondOrderStableTransferFn {
         // + offset
         // first we add the offset
 
-        let summation_of_responses: f64 = self.response_vec.
+        let summation_of_responses: Ratio = self.response_vec.
             iter_mut().map(
                 |second_order_response|{
                     second_order_response.calculate_response(current_time)}
@@ -256,12 +243,12 @@ impl SecondOrderStableTransferFn {
 /// overdamped stable systems
 #[derive(Debug,PartialEq, PartialOrd, Clone, Copy)]
 pub struct SecondOrderStableStepResponse {
-    process_gain: f64,
+    process_gain: Ratio,
     process_time: Time,
     start_time: Time,
-    user_input: f64,
+    user_input: Ratio,
     current_time: Time,
-    damping_factor: f64,
+    damping_factor: Ratio,
 }
 
 impl Default for SecondOrderStableStepResponse {
@@ -270,12 +257,12 @@ impl Default for SecondOrderStableStepResponse {
     /// process gain 1.0 (dimensionless)
     fn default() -> Self {
         SecondOrderStableStepResponse { 
-            process_gain: 1.0, 
+            process_gain: Ratio::new::<ratio>(1.0), 
             process_time: Time::new::<second>(1.0), 
             start_time: Time::new::<second>(0.0), 
-            user_input: 1.0, 
+            user_input: Ratio::new::<ratio>(1.0), 
             current_time: Time::new::<second>(0.0),
-            damping_factor: 1.0,
+            damping_factor: Ratio::new::<ratio>(1.0),
         }
     }
 }
@@ -285,17 +272,17 @@ impl SecondOrderStableStepResponse {
 
     /// constructor 
     pub fn new(
-        process_gain: f64,
+        process_gain: Ratio,
         process_time: Time,
-        damping_factor: f64,
+        damping_factor: Ratio,
         start_time: Time,
-        user_input: f64,
+        user_input: Ratio,
         current_time: Time,) -> Result<Self, ChemEngProcessControlSimulatorError> {
 
         // if damping factor is less than or equal 0,
         // return an error
 
-        if damping_factor <= 0.0 {
+        if damping_factor.value <= 0.0 {
             return Err(ChemEngProcessControlSimulatorError::
                 UnstableDampingFactorForStableTransferFunction);
         }
@@ -325,22 +312,22 @@ impl SecondOrderStableStepResponse {
 
         let damping_factor = self.damping_factor;
         // no unstable or undamped responses allowed
-        if damping_factor <= 0.0 {
+        if damping_factor.value <= 0.0 {
             todo!("damping factor needs to be more than 0.0, \n 
                 also need to implement Result enum")
         }
 
-        if damping_factor < 1.0 {
+        if damping_factor.get::<ratio>() < 1.0 {
             // case 1: underdamped systems
             // (zeta * t/tau_p) > 20.0
 
             let underdamped_time_ratio = damping_factor * time_ratio;
 
-            if underdamped_time_ratio > 20.0 {
+            if underdamped_time_ratio.get::<ratio>() > 20.0 {
                 return true;
             }
 
-        } else if damping_factor == 1.0 {
+        } else if damping_factor.get::<ratio>() == 1.0 {
 
             // case 2: critically damped system
             if time_ratio > 23.0 {
@@ -349,8 +336,8 @@ impl SecondOrderStableStepResponse {
 
         } else {
             // case 3: overdamped system
-            let sqrt_zeta_sq_minus_one: f64 = 
-                (damping_factor.powf(2.0) - 1.0).sqrt();
+            let sqrt_zeta_sq_minus_one: Ratio = 
+                (damping_factor*damping_factor - Ratio::new::<ratio>(1.0)).sqrt();
             let zeta = damping_factor;
 
             let overdamped_time_ratio_one = 
@@ -360,9 +347,9 @@ impl SecondOrderStableStepResponse {
                 (zeta + sqrt_zeta_sq_minus_one) * time_ratio;
 
             let overdamped_mode_one_steady_state: bool = 
-                overdamped_time_ratio_one.abs() > 20.0;
+                overdamped_time_ratio_one.get::<ratio>().abs() > 20.0;
             let overdamped_mode_two_steady_state: bool = 
-                overdamped_time_ratio_two.abs() > 20.0;
+                overdamped_time_ratio_two.get::<ratio>().abs() > 20.0;
 
             if overdamped_mode_two_steady_state && 
                 overdamped_mode_one_steady_state {
@@ -381,7 +368,8 @@ impl SecondOrderStableStepResponse {
 
     /// calculates the response of the second order system
     /// at a given time
-    pub fn calculate_response(&mut self, simulation_time: Time) -> f64 {
+    pub fn calculate_response(&mut self, simulation_time: Time) 
+    -> Ratio {
 
         // get the current time (t - t0)
         self.current_time = simulation_time;
@@ -394,12 +382,12 @@ impl SecondOrderStableStepResponse {
         // if the current time is before start time, no response 
         // from this transfer function
         if !heaviside_on {
-            return 0.0;
+            return Ratio::ZERO;
         }
 
         // time ratio is t/tau
         let time_ratio: Ratio = time_elapsed /  self.process_time;
-        let steady_state_value: f64 = self.steady_state_value();
+        let steady_state_value: Ratio = self.steady_state_value();
 
         // otherwise, calculate as per normal
 
@@ -412,49 +400,51 @@ impl SecondOrderStableStepResponse {
         let damping_factor = self.damping_factor;
 
         // no unstable or undamped responses allowed
-        if damping_factor <= 0.0 {
+        if damping_factor.value <= 0.0 {
             todo!("damping factor needs to be more than 0.0, \n 
                 also need to implement Result enum")
         }
 
-        let response;
+        let response: Ratio;
 
-        if damping_factor < 1.0 {
+        if damping_factor.get::<ratio>() < 1.0 {
             // case 1: underdamped
 
-            let sqrt_one_minus_zeta_sq: f64 = 
-                (1.0 - damping_factor.powf(2.0)).sqrt();
+            let sqrt_one_minus_zeta_sq: Ratio = 
+                (Ratio::new::<ratio>(1.0) 
+                - damping_factor*damping_factor).sqrt();
             // first, cos term
             // cos ( sqrt(1-zeta^2)/tau * t)
 
-            let omega_t_term: f64 = sqrt_one_minus_zeta_sq 
+            let omega_t_term: Ratio = sqrt_one_minus_zeta_sq 
                 * time_ratio.get::<uom::si::ratio::ratio>();
 
-            let cosine_term = omega_t_term.cos();
+            let cosine_term: Ratio = Ratio::new::<ratio>(
+                omega_t_term.get::<ratio>().cos());
             
             // next, sine term,
             // zeta / (1 - zeta^2) * sin ( sqrt(1 - zeta^2)/ tau * t)
 
             let sine_term = damping_factor / sqrt_one_minus_zeta_sq 
-                * omega_t_term.sin();
+                * omega_t_term.get::<ratio>().sin();
             
             // now we need 1 - exp(- zeta * t/tau) *
             // [ cos term + sine term ]
             
-            let cosine_and_sine_term: f64 = cosine_term + sine_term;
+            let cosine_and_sine_term: Ratio = cosine_term + sine_term;
 
             // exp(- zeta * t/tau) * [ cos term + sine term ]
-            let exponential_term: f64 = (
+            let exponential_term: Ratio = (
                 -damping_factor * time_ratio.get::<uom::si::ratio::ratio>()).exp()
                 *cosine_and_sine_term;
 
-            let scaled_response = 1.0 - exponential_term;
+            let scaled_response = Ratio::new::<ratio>(1.0) - exponential_term;
 
             // a_0 * K_p *exp(- zeta * t/tau) * [ cos term + sine term ]
             response =  steady_state_value * scaled_response;
 
 
-        } else if damping_factor == 1.0 {
+        } else if damping_factor.get::<ratio>() == 1.0 {
             // case 2: critical damping
             //
             // a_0 K_p 
@@ -477,22 +467,24 @@ impl SecondOrderStableStepResponse {
         } else {
             // case 3: overdamped
             
-            let sqrt_zeta_sq_minus_one: f64 = 
-                (damping_factor.powf(2.0) - 1.0).sqrt();
+            let sqrt_zeta_sq_minus_one: Ratio = 
+                (damping_factor*damping_factor - Ratio::new::<ratio>(1.0)
+            ).sqrt();
 
             // first, cosh term
             // cosh ( sqrt(zeta^2-1)/tau * t)
 
-            let omega_t_term: f64 = sqrt_zeta_sq_minus_one 
+            let omega_t_term: Ratio = sqrt_zeta_sq_minus_one 
                 * time_ratio.get::<uom::si::ratio::ratio>();
 
-            let cosh_term = omega_t_term.cosh();
+            let cosh_term = Ratio::new::<ratio>(
+                omega_t_term.get::<ratio>().cosh());
 
             // next, sinh term,
             // zeta / (1 - zeta^2) * sinh ( sqrt(zeta^2 - 1)/ tau * t)
 
             let sinh_term = damping_factor / sqrt_zeta_sq_minus_one 
-                * omega_t_term.sinh();
+                * omega_t_term.get::<ratio>().sinh();
 
             // now we need 1 - exp(- zeta * t/tau) *
             // [ cosh term + sinh term ]
@@ -500,11 +492,12 @@ impl SecondOrderStableStepResponse {
             let cosh_term_plus_sinh_term = cosh_term + sinh_term;
 
             // exp(- zeta * t/tau) * [ cos term + sine term ]
-            let exponential_term: f64 = (
+            let exponential_term: Ratio = (
                 -damping_factor * time_ratio.get::<uom::si::ratio::ratio>()).exp()
                 *cosh_term_plus_sinh_term;
 
-            let scaled_response = 1.0 - exponential_term;
+            let scaled_response = Ratio::new::<ratio>(1.0)
+            - exponential_term;
 
             // a_0 * K_p *exp(- zeta * t/tau) * [ cos term + sine term ]
             response =  steady_state_value * scaled_response;
@@ -516,8 +509,8 @@ impl SecondOrderStableStepResponse {
 
     /// steady state value 
     /// u1(t - t1) * Kp 
-    pub fn steady_state_value(&self) -> f64 {
-        let response: f64 = self.user_input * self.process_gain;
+    pub fn steady_state_value(&self) -> Ratio {
+        let response: Ratio = self.user_input * self.process_gain;
         response
     }
 }

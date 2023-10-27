@@ -30,7 +30,9 @@ impl SecondOrder {
     ///
     ///
     /// Unfortunately, uom does not have a time^2 unit yet,
-    /// So I'm using the manual way:
+    /// So I'm using the manual way, to define a new unit 
+    /// using uom
+    /// https://github.com/iliekturtles/uom/issues/174
     /// This is how one writes a time squared unit
     /// Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>
     /// 
@@ -39,7 +41,7 @@ impl SecondOrder {
     c1: Ratio,
     a2: TimeSquared,
     b2: Time,
-    c2: Ratio){
+    c2: Ratio) -> Self {
 
         // process time 
         let tau_p: Time = (a2/c2).sqrt();
@@ -57,9 +59,16 @@ impl SecondOrder {
         // angular frequency for decaying sinusoids
         let omega: Frequency = (c2/a2 - 0.25*b2*b2/a2/a2).sqrt();
 
-
+        todo!()
 
     }
+
+    // underdamped stable systems
+    #[inline]
+    fn new_underdamped_stable_system(){
+
+    }
+
 }
 
 
