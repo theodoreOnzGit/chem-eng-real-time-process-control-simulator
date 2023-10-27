@@ -69,6 +69,27 @@ impl TransferFnTraits for TransferFnSecondOrder {
         time: Time) -> 
     Result<Ratio, ChemEngProcessControlSimulatorError> {
 
+        match self {
+            TransferFnSecondOrder::StableUnderdamped(
+                tf_no_zeroes, 
+                cosine_decaying_sinusoid, 
+                sine_decaying_sinusoid_) => {
+                    let mut response: Ratio = Ratio::ZERO;
+
+                    response += tf_no_zeroes.set_user_input_and_calc_output(
+                        time, user_input)?;
+                    response += cosine_decaying_sinusoid.set_user_input_and_calc_output(
+                        time, user_input)?;
+                    response += sine_decaying_sinusoid_.set_user_input_and_calc_output(
+                        time, user_input)?;
+
+                },
+            TransferFnSecondOrder::StableCriticallydamped => todo!(),
+            TransferFnSecondOrder::StableOverdamped => todo!(),
+            TransferFnSecondOrder::Unstable => todo!(),
+            TransferFnSecondOrder::Undamped => todo!(),
+        }
+
         todo!()
     }
 }
