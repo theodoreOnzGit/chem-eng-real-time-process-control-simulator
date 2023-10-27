@@ -1,3 +1,4 @@
+use csv::Writer;
 use uom::si::ratio::ratio;
 use uom::si::f64::*;
 use uom::{ConstZero};
@@ -102,7 +103,6 @@ impl TransferFnTraits for TransferFnSecondOrder {
             TransferFnSecondOrder::Undamped => todo!(),
         }
 
-        todo!()
     }
 }
 
@@ -132,6 +132,22 @@ impl TransferFnSecondOrder {
     a2: TimeSquared,
     b2: Time,
     c2: Ratio) -> Result<Self,ChemEngProcessControlSimulatorError> {
+
+        let mut title_string: String = "2nd_ord_transfer_fn_".to_owned();
+        title_string += &a1.value.to_string();
+        title_string += "s_squared_plus_";
+        title_string += &b1.value.to_string();
+        title_string += "s_plus_";
+        title_string += &c1.value.to_string();
+        title_string += "_over_";
+        title_string += &a2.value.to_string();
+        title_string += "s_squared_plus_";
+        title_string += &b2.value.to_string();
+        title_string += "s_plus_";
+        title_string += &c2.value.to_string();
+        title_string += ".csv";
+        let mut wtr: Writer<std::fs::File> = Writer::from_path(title_string)
+            .unwrap();
 
         // process time 
         let tau_p: Time = (a2/c2).sqrt();
