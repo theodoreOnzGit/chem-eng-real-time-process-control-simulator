@@ -277,9 +277,9 @@ pub(crate) fn demo_complex_stable_underdamped_second_order_simulation(){
 
     let one_second = Time::new::<second>(1.0);
 
-    let a1: TimeSquared = Time::ZERO * Time::ZERO;
-    let b1: Time = Time::new::<second>(2.5);
-    let c1: Ratio = Ratio::new::<ratio>(0.0);
+    let a1: TimeSquared = one_second * Time::new::<second>(2.5);
+    let b1: Time = -Time::new::<second>(0.5);
+    let c1: Ratio = Ratio::new::<ratio>(1.0);
 
     let a2: TimeSquared =one_second * one_second* 3.0;
     let b2: Time = Time::new::<second>(4.0);
