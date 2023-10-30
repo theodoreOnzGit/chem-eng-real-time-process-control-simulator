@@ -2,14 +2,11 @@ use uom::{si::{f64::*, time::second, frequency::hertz, ratio::ratio}, ConstZero}
 
 use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
 
-/// second order system with transfer function 
-/// in the form 
+/// step responses for transfer function of type 
 ///
-/// K_p / ( tau^2 s^2 + 2 * tau * zeta s + 1)
+/// G(s) = (a1 s^2 + bs)/ (a2 s^2 + b2 s + c)
 ///
-/// tau is process time 
-/// zeta is damping factor 
-/// K_p is process gain (dimensionless, be careful)
+///
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub struct DecayingSinusoid {
     pub(crate) magnitude: Ratio,
