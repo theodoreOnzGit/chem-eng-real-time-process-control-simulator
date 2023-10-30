@@ -117,7 +117,9 @@ pub(crate) fn stable_first_order_with_delay_simulation_with_zeroes(){
 /// a1 s + b1 
 /// ---------
 /// a2 s + b2 
+/// 
 ///
+/// validated with scilab
 ///
 pub(crate) fn stable_first_order_with_delay_simulation_no_zeroes(){
 

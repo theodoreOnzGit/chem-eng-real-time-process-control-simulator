@@ -393,7 +393,7 @@ impl StepFunction {
         let time_elapsed = self.current_time - self.start_time;
 
 
-        if time_elapsed.value > 0.0 {
+        if time_elapsed.value >= 0.0 {
             return true;
         }
 
@@ -412,7 +412,7 @@ impl StepFunction {
 
         // first let's deal with the heaviside function
 
-        let heaviside_on: bool = time_elapsed.value > 0.0;
+        let heaviside_on: bool = time_elapsed.value >= 0.0;
 
         // if the current time is before start time, no response 
         // from this transfer function

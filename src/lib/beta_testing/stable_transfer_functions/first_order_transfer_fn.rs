@@ -312,7 +312,7 @@ impl FirstOrderResponse {
 
         // first let's deal with the heaviside function
 
-        let heaviside_on: bool = self.current_time > self.start_time;
+        let heaviside_on: bool = self.current_time >= self.start_time;
 
         // if the current time is before start time, no response 
         // from this transfer function
