@@ -178,7 +178,7 @@ impl TransferFnFirstOrder {
         let k_p: Ratio = b1/b2;
 
         // process gain for zero
-        let k_p_for_zero: Time = a1/b2;
+        let k_p_for_zero: Ratio = a1/b2/tau_p;
 
         // now, dead time is zero by default, 
         // you'll have to use a method to manually set dead time
