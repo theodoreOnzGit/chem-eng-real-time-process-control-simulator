@@ -53,7 +53,7 @@ impl Into<String> for ChemEngProcessControlSimulatorError {
                 "wrong transfer function type".to_owned()
             },
             ChemEngProcessControlSimulatorError::CsvError(err) => {
-                "csv error".to_owned()
+                err.to_string()
             },
 
         }

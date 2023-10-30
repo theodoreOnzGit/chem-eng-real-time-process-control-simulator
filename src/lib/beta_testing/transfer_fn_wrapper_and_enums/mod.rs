@@ -16,7 +16,9 @@ impl Default for TransferFn {
 impl TransferFnTraits for TransferFn {
     fn set_dead_time(&mut self, dead_time: Time) {
         match self {
-            TransferFn::FirstOrder(first_order) => todo!(),
+            TransferFn::FirstOrder(first_order) => {
+                first_order.set_dead_time(dead_time)
+            },
             TransferFn::SecondOrder(second_order) => {
                 second_order.set_dead_time(dead_time)
             },
@@ -29,7 +31,9 @@ impl TransferFnTraits for TransferFn {
         time_of_input: Time) -> 
     Result<Ratio, ChemEngProcessControlSimulatorError> {
         match self {
-            TransferFn::FirstOrder(first_order) => todo!(),
+            TransferFn::FirstOrder(first_order) => {
+                first_order.set_user_input_and_calc(user_input, time_of_input)
+            },
             TransferFn::SecondOrder(second_order) => {
                 second_order.set_user_input_and_calc(user_input, time_of_input)
             },
@@ -39,7 +43,9 @@ impl TransferFnTraits for TransferFn {
     fn spawn_writer(&mut self, name: String) -> Result<Writer<std::fs::File>,
     ChemEngProcessControlSimulatorError>{
         match self {
-            TransferFn::FirstOrder(first_order) => todo!(),
+            TransferFn::FirstOrder(first_order) => {
+                first_order.spawn_writer(name)
+            },
             TransferFn::SecondOrder(second_order) => {
                 second_order.spawn_writer(name)
             },
@@ -53,7 +59,9 @@ impl TransferFnTraits for TransferFn {
         output: Ratio) -> Result<(), 
     ChemEngProcessControlSimulatorError> {
         match self {
-            TransferFn::FirstOrder(first_order) => todo!(),
+            TransferFn::FirstOrder(first_order) => {
+                first_order.csv_write_values(wtr, time, input, output)
+            },
             TransferFn::SecondOrder(second_order) => {
                 second_order.csv_write_values(wtr, time,
                     input, output)
