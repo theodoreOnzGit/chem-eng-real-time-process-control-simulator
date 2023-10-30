@@ -169,8 +169,7 @@ impl TransferFnFirstOrder {
     pub fn new(a1: Time, 
         b1: Ratio, 
         a2: Time,
-        b2: Ratio,
-        dead_time: Time) -> Result<Self,ChemEngProcessControlSimulatorError> {
+        b2: Ratio) -> Result<Self,ChemEngProcessControlSimulatorError> {
         // process time 
         let tau_p: Time = a2/b2;
 
@@ -181,6 +180,8 @@ impl TransferFnFirstOrder {
         // process gain for zero
         let k_p_for_zero: Time = a1/b2;
 
+        // now, dead time is zero by default, 
+        // you'll have to use a method to manually set dead time
 
         let tau_p_value: f64 = tau_p.get::<second>();
 
@@ -199,7 +200,7 @@ impl TransferFnFirstOrder {
                     tau_p,
                     Ratio::ZERO,
                     Ratio::ZERO,
-                    dead_time,
+                    Time::ZERO,
                 )?;
             let first_ord_transfer_fn_for_zeroes = FirstOrderStableTransferFnForZeroes::
                 new(
@@ -207,7 +208,7 @@ impl TransferFnFirstOrder {
                     tau_p,
                     Ratio::ZERO,
                     Ratio::ZERO,
-                    dead_time,
+                    Time::ZERO,
                 )?;
 
             return Ok(Self::Stable(
