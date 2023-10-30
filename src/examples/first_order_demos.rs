@@ -33,11 +33,13 @@ pub(crate) fn stable_first_order_with_delay_simulation(){
 
     let a2: Time = Time::new::<second>(4.0);
     let b2: Ratio = Ratio::new::<ratio>(2.0);
+    let dead_time = Time::new::<second>(2.0);
     let mut current_simulation_time: Time = Time::new::<second>(0.0);
-    let max_simulation_time: Time = Time::new::<second>(4.0e4 as f64);
-    let timestep: Time = Time::new::<second>(200.0);
+    let max_simulation_time: Time = Time::new::<second>(30.0 as f64);
+    let timestep: Time = Time::new::<second>(0.1);
 
     let mut tf = TransferFnFirstOrder::new(a1, b1, a2, b2).unwrap();
+    tf.set_dead_time(dead_time);
     //
     // if you need to set initial values
     // because the transfer function only measures deviations from 
