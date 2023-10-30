@@ -1,166 +1,112 @@
-use uom::{si::{f64::*, time::second, frequency::hertz, ratio::ratio}, ConstZero};
+use uom::{si::{f64::*, time::second, ratio::ratio}, ConstZero};
 
-use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
+use crate::alpha_nightly::errors::ChemEngProcessControlSimulatorError;
 
-/// step responses for transfer function of type 
-///
-/// G(s) = (a1 s + b)/ (a2 s + b2 )
-///
-/// Specifically, we cover the zero part:
-///
-/// G(s) = (a1 s)/(a2s +b2)
-///
-/// FOr step response, 1/s
-///
-///
-/// G(s) = (a1 )/(a2s +b2)
-///
-///
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
-pub struct DecayingExponent {
-    /// initial exponent value
-    pub(crate) magnitude: Ratio,
-    /// decay frequency or 1/decay time
-    pub(crate) a: Frequency,
+pub struct FirstOrderStableTransferFnNoZeroes {
+    pub(crate) process_gain: Ratio,
+    pub(crate) process_time: Time,
     pub(crate) previous_timestep_input: Ratio,
-    /// oscillation frequency
-    pub(crate) omega: Frequency,
     /// previous timestep output
     pub(crate) offset: Ratio,
     /// delay
     pub(crate) delay: Time,
+
     /// vector of first order responses 
-    pub(crate) response_vec: Vec<DecayExponentResponse>,
-    /// choose whether it's a sine or cosine,
-    pub(crate) sinusoid_type: TransferFnExponentType,
+    pub(crate) response_vec: Vec<FirstOrderResponse>,
 }
 
-#[derive(Debug,PartialEq, PartialOrd, Clone, Copy)]
-pub enum TransferFnExponentType {
-    Sine,
-    Cosine
-}
-
-impl Default for DecayingExponent {
+impl Default for FirstOrderStableTransferFnNoZeroes {
     /// default is: 
     ///
-    /// 1 / ( (s+1)^2 + 1)
-    /// time in seconds, 
-    /// frequency in hertz
+    /// 1 / (s + 1)
+    ///
+    /// with initial user input of 0.0 
+    /// and initial user value of 0.0
     fn default() -> Self {
-        DecayingExponent 
-            { magnitude: Ratio::new::<ratio>(1.0), 
-            a: Frequency::new::<hertz>(1.0), 
-            previous_timestep_input: Ratio::ZERO, 
-            offset: Ratio::ZERO, 
+        FirstOrderStableTransferFnNoZeroes { 
+            process_gain: Ratio::new::<ratio>(1.0), 
+            process_time: Time::new::<second>(1.0), 
+            previous_timestep_input: Ratio::new::<ratio>(0.0), 
+            offset: Ratio::new::<ratio>(0.0), 
             delay: Time::new::<second>(0.0), 
             response_vec: vec![],
-            omega: Frequency::new::<hertz>(1.0),
-            sinusoid_type: TransferFnExponentType::Sine,
         }
     }
 }
 
-impl DecayingExponent {
+impl FirstOrderStableTransferFnNoZeroes {
 
     /// constructors 
-    pub fn new_sine(magnitude: Ratio,
-        decay_frequency: Frequency,
+    pub fn new(process_gain: Ratio,
+        process_time: Time,
         initial_input: Ratio,
         initial_value: Ratio,
-        delay: Time, omega:Frequency) -> Result<Self, ChemEngProcessControlSimulatorError> {
+        delay: Time,) -> Result<Self, ChemEngProcessControlSimulatorError> {
 
-        // if damping factor is less than or equal 
-        // 0, should throw an error 
-        // or panic (i will use errors maybe later?)
-
-        if decay_frequency.value <= 0.0 {
+        if process_time.get::<second>() <= 0.0 {
             return Err(ChemEngProcessControlSimulatorError::
                 UnstableDampingFactorForStableTransferFunction);
         }
-
-        if omega.value <= 0.0 {
-            return Err(ChemEngProcessControlSimulatorError::
-                UnstableDampingFactorForStableTransferFunction);
-        }
-
-        Ok(DecayingExponent { 
-            magnitude, 
-            a: decay_frequency, 
+        Ok(FirstOrderStableTransferFnNoZeroes { 
+            process_gain, 
+            process_time, 
             previous_timestep_input: initial_input, 
             offset: initial_value, 
             delay, 
             response_vec: vec![],
-            omega,
-            sinusoid_type: TransferFnExponentType::Sine,
         })
-
     }
 
-
-    pub fn new_cosine(magnitude: Ratio,
-        decay_frequency: Frequency,
+    /// first order filter 
+    pub fn new_filter(process_time: Time,
         initial_input: Ratio,
-        initial_value: Ratio,
-        delay: Time, omega:Frequency) -> Result<Self, ChemEngProcessControlSimulatorError> {
+        initial_value: Ratio) -> Result<Self, ChemEngProcessControlSimulatorError> {
 
-        if decay_frequency.value <= 0.0 {
+        if process_time.get::<second>() <= 0.0 {
             return Err(ChemEngProcessControlSimulatorError::
                 UnstableDampingFactorForStableTransferFunction);
         }
-
-        if omega.value <= 0.0 {
-            return Err(ChemEngProcessControlSimulatorError::
-                UnstableDampingFactorForStableTransferFunction);
-        }
-
-        Ok(DecayingExponent { 
-            magnitude, 
-            a: decay_frequency, 
+        Ok(FirstOrderStableTransferFnNoZeroes { 
+            process_gain: Ratio::new::<ratio>(1.0), 
+            process_time, 
             previous_timestep_input: initial_input, 
             offset: initial_value, 
-            delay, 
+            delay: Time::new::<second>(0.0), 
             response_vec: vec![],
-            omega,
-            sinusoid_type: TransferFnExponentType::Cosine,
         })
-
     }
 
     /// sets the user input to some value
     pub fn set_user_input_and_calc_output(&mut self, 
         current_time: Time,
         current_input: Ratio) 
-    -> Result<Ratio,ChemEngProcessControlSimulatorError> {
+    -> Result<Ratio, ChemEngProcessControlSimulatorError> {
         // check if input is equal to current input 
 
         // case where input is not the same to 9 decimal places
 
         let input_changed: bool = 
-        (current_input.get::<ratio>() * 1e9).round() 
-        - (self.previous_timestep_input.clone().get::<ratio>()*1e9).round() 
-        != 0.0 ;
+            (current_input.get::<ratio>() * 1e9).round() 
+            - (self.previous_timestep_input.clone()
+                .get::<ratio>()*1e9).round() != 0.0 ;
 
         if input_changed {
             // need to add a response to the vector
 
-            let magnitude = self.magnitude;
-            let process_time = self.a;
+            let process_gain = self.process_gain;
+            let process_time = self.process_time;
             let user_input = current_input - self.previous_timestep_input;
             // the time where the first order response kicks in
             let start_time = current_time + self.delay;
-            let sinusoid_frequency = self.omega;
-            let sinusoid_type = self.sinusoid_type;
 
             // make a new response
-            let new_response = DecayExponentResponse::new(
-                magnitude,
+            let new_response = FirstOrderResponse::new(
+                process_gain,
                 process_time,
                 start_time,
                 user_input,
-                current_time,
-                sinusoid_frequency,
-                sinusoid_type
+                current_time
             )?;
 
             // add response to the vector
@@ -171,11 +117,11 @@ impl DecayingExponent {
             self.previous_timestep_input = current_input;
 
             // then we are done!
-
+            
         }
 
         // clean up the vector first
-        self.clear_sinusoid_response_vector();
+        self.clear_first_order_response_vector();
 
         // need to calculate using the list of 
         // first order response vectors as per normal
@@ -187,11 +133,9 @@ impl DecayingExponent {
 
         let summation_of_responses: Ratio = self.response_vec.
             iter_mut().map(
-                |second_order_response|{
-                    second_order_response.calculate_response(current_time)}
+                |first_order_response|{
+                    first_order_response.calculate_response(current_time)}
             ).sum();
-        //dbg!(summation_of_responses);
-        //dbg!(&self.response_vec);
 
         let output = self.offset + summation_of_responses;
 
@@ -200,7 +144,7 @@ impl DecayingExponent {
     }
 
     /// clears the item if they have reached steady state
-    fn clear_sinusoid_response_vector(&mut self){
+    fn clear_first_order_response_vector(&mut self){
 
         let index_of_steady_state_result = self.response_vec.iter().position(
             |first_order_response| {
@@ -217,7 +161,7 @@ impl DecayingExponent {
                 // offset
                 let first_order_response = self.response_vec[index].clone();
                 let steady_state_value_of_response = 
-                first_order_response.steady_state_value();
+                    first_order_response.steady_state_value();
                 self.offset += steady_state_value_of_response;
 
                 // then i remove the first order response from the 
@@ -240,11 +184,11 @@ impl DecayingExponent {
         );
         // check if steady state responses are present
         let mut steady_state_responses_present = 
-        match index_of_steady_state_result {
-            Some(_) => true,
-            None => false,
-        };
-
+            match index_of_steady_state_result {
+                Some(_) => true,
+                None => false,
+            };
+        
         if !steady_state_responses_present {
             return;
         } 
@@ -266,7 +210,7 @@ impl DecayingExponent {
                     // offset
                     let first_order_response = self.response_vec[index].clone();
                     let steady_state_value_of_response = 
-                    first_order_response.steady_state_value();
+                        first_order_response.steady_state_value();
                     self.offset += steady_state_value_of_response;
 
                     // then i remove the first order response from the 
@@ -284,100 +228,82 @@ impl DecayingExponent {
         return;
 
     }
-
+    
 }
 
 
 
 
-/// second order response struct, 
+/// first order response struct, 
 /// will help to caluclate
-/// step responses for underdamped, crtically damped and 
-/// overdamped stable systems
+/// u1(t - t1) * Kp * [1-exp(- [t-t1] / tau])
 #[derive(Debug,PartialEq, PartialOrd, Clone, Copy)]
-pub struct DecayExponentResponse {
-    magnitude: Ratio,
-    a: Frequency,
+pub struct FirstOrderResponse {
+    process_gain: Ratio,
+    process_time: Time,
     start_time: Time,
     user_input: Ratio,
     current_time: Time,
-    omega: Frequency,
-    sinusoid_type: TransferFnExponentType,
 }
 
-impl Default for DecayExponentResponse {
-    /// default is a critically damped system with 
-    /// 1 / ( (s+1)^2 + 1)
-    /// time in seconds, 
-    /// frequency in hertz
+impl Default for FirstOrderResponse {
     fn default() -> Self {
-        DecayExponentResponse { 
-            magnitude: Ratio::new::<ratio>(1.0), 
-            a: Frequency::new::<hertz>(1.0), 
+        FirstOrderResponse { 
+            process_gain: Ratio::new::<ratio>(1.0), 
+            process_time: Time::new::<second>(1.0), 
             start_time: Time::new::<second>(0.0), 
             user_input: Ratio::new::<ratio>(1.0), 
             current_time: Time::new::<second>(0.0),
-            omega: Frequency::new::<hertz>(1.0),
-            sinusoid_type: TransferFnExponentType::Sine,
         }
     }
 }
 
 
-impl DecayExponentResponse {
+impl FirstOrderResponse {
 
     /// constructor 
     pub fn new(
-        magnitude: Ratio,
-        a: Frequency,
+        process_gain: Ratio,
+        process_time: Time,
         start_time: Time,
         user_input: Ratio,
-        current_time: Time,
-        omega: Frequency,
-        sinusoid_type: TransferFnExponentType) -> Result<Self,ChemEngProcessControlSimulatorError> {
-
-        // if damping factor is less than or equal 
-        // 0, should throw an error 
-        // or panic (i will use errors maybe later?)
-
-        if a.value <= 0.0 {
+        current_time: Time,) -> Result<Self, ChemEngProcessControlSimulatorError> {
+        if process_time.get::<second>() <= 0.0 {
             return Err(ChemEngProcessControlSimulatorError::
                 UnstableDampingFactorForStableTransferFunction);
         }
-        Ok(DecayExponentResponse { 
-            magnitude, 
-            a, 
+        Ok(FirstOrderResponse { 
+            process_gain, 
+            process_time, 
             start_time, 
             user_input, 
             current_time,
-            omega,
-            sinusoid_type,
         })
     }
 
     /// checks if the transfer function has more or less reached 
     /// steady state,
     ///
-    /// this is determined by exp(-at) 
-    /// if at is 20 or more, then we have reached steady state
+    /// I consider this where the time elapsed is 20 times 
+    /// the process_time
+    ///
+    /// this is because exp(-20) is about 2e-9, it is tiny...
     pub fn is_steady_state(&self) -> bool {
         let time_elapsed = self.current_time - self.start_time;
 
-        //  (at) in exp(-at)
-        let at: Ratio = time_elapsed *  self.a;
+        let time_ratio: f64 = time_elapsed.value/self.process_time.value;
 
-        if at > Ratio::new::<ratio>(20.0){
+        if time_ratio > 20.0 {
             return true;
         }
-
-        // 
 
         return false;
     }
 
 
-    /// calculates the response of the second order system
+    /// calculates the response of the first order system
     /// at a given time
+    /// u1(t - t1) * Kp * [1-exp(- [t-t1] / tau])
     pub fn calculate_response(&mut self, simulation_time: Time) -> Ratio {
 
         // get the current time (t - t0)
@@ -386,7 +312,7 @@ impl DecayExponentResponse {
 
         // first let's deal with the heaviside function
 
-        let heaviside_on: bool = self.current_time > self.start_time;
+        let heaviside_on: bool = self.current_time >= self.start_time;
 
         // if the current time is before start time, no response 
         // from this transfer function
@@ -394,37 +320,22 @@ impl DecayExponentResponse {
             return Ratio::ZERO;
         }
 
+        let time_ratio: Ratio = time_elapsed /  self.process_time;
+        let exponent_ratio: f64 = -time_ratio.value;
 
+        // otherwise, calculate as per normal
 
-        let response: Ratio;
-        let at: Ratio = time_elapsed *  self.a;
-        let at: f64 = at.get::<ratio>();
-        let omega_t: Ratio = time_elapsed * self.omega;
-        let omega_t: f64 = omega_t.get::<ratio>();
-
-        response = match self.sinusoid_type {
-            TransferFnExponentType::Sine => {
-                self.user_input
-                * self.magnitude 
-                * (-at).exp()
-                * (omega_t).sin()
-            },
-            TransferFnExponentType::Cosine => {
-                self.user_input
-                * self.magnitude 
-                * (-at).exp()
-                * (omega_t).cos()
-            },
-        };
+        // u1(t - t1) * Kp * [1-exp(- [t-t1] / tau])
+        let response: Ratio = self.steady_state_value()
+            * (1.0 - exponent_ratio.exp());
 
         return response;
-
     }
 
     /// steady state value 
-    /// of a decaying sinusoid is zero
+    /// u1(t - t1) * Kp 
     pub fn steady_state_value(&self) -> Ratio {
-        let response: Ratio = Ratio::ZERO;
+        let response: Ratio = self.user_input * self.process_gain;
         response
     }
 }
