@@ -121,7 +121,7 @@ impl TransferFnTraits for TransferFnFirstOrder {
         let mut title_string: String = name;
         match self {
             TransferFnFirstOrder::Stable(_,_) => {
-                title_string += "1st_ord_transfer_fn_stable_underdamped.csv";
+                title_string += "1st_ord_transfer_fn_stable.csv";
             },
             TransferFnFirstOrder::Unstable => todo!(),
             TransferFnFirstOrder::ConstantValueUndamped => todo!(),
@@ -170,15 +170,15 @@ impl TransferFnFirstOrder {
         b1: Ratio, 
         a2: Time,
         b2: Ratio) -> Result<Self,ChemEngProcessControlSimulatorError> {
-
-
         // process time 
         let tau_p: Time = a2/b2;
-
 
         // process_gain 
         // I assume units of c1 are dimensionless
         let k_p: Ratio = b1/b2;
+
+        // process gain for zero
+        let k_p_for_zero: Time = a1/b2;
 
 
         let tau_p_value: f64 = tau_p.get::<second>();

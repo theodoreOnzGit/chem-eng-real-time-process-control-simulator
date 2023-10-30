@@ -8,7 +8,7 @@ use super::first_order_transfer_fn::FirstOrderResponse;
 /// G(s) =  K_p s / (tau_p s + 1)
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub struct FirstOrderStableTransferFnForZeroes {
-    pub(crate) process_gain: Ratio,
+    pub(crate) process_gain: Time,
     pub(crate) process_time: Time,
     pub(crate) previous_timestep_input: Ratio,
     /// previous timestep output
@@ -31,7 +31,7 @@ impl Default for FirstOrderStableTransferFnForZeroes {
     /// and initial user value of 0.0
     fn default() -> Self {
         FirstOrderStableTransferFnForZeroes { 
-            process_gain: Ratio::new::<ratio>(1.0), 
+            process_gain: Time::new::<second>(1.0), 
             process_time: Time::new::<second>(1.0), 
             previous_timestep_input: Ratio::new::<ratio>(0.0), 
             offset: Ratio::new::<ratio>(0.0), 
@@ -47,7 +47,7 @@ impl FirstOrderStableTransferFnForZeroes {
 
     /// constructors 
     /// G(s) =  K_p s / (tau_p s + 1)
-    pub fn new(process_gain: Ratio,
+    pub fn new(process_gain: Time,
         process_time: Time,
         initial_input: Ratio,
         initial_value: Ratio,
@@ -101,6 +101,8 @@ impl FirstOrderStableTransferFnForZeroes {
             // the existing offset, and delete the vector
 
             let process_gain = self.process_gain;
+            let nondimensionalised_process_gain: Ratio 
+                = process_gain / Time::new::<second>(1.0);
             let process_time = self.process_time;
             let user_input = current_input - self.previous_timestep_input;
             // the time where the first order response kicks in
@@ -108,7 +110,7 @@ impl FirstOrderStableTransferFnForZeroes {
 
             // make a new first order response
             let new_first_order_response = FirstOrderResponse::new(
-                -process_gain,
+                -nondimensionalised_process_gain,
                 process_time,
                 start_time,
                 user_input,
@@ -122,7 +124,7 @@ impl FirstOrderStableTransferFnForZeroes {
             //
             //
             let new_step_fn_response = StepFunction::new(
-                process_gain,
+                nondimensionalised_process_gain,
                 start_time,
                 user_input,
                 current_time
