@@ -169,7 +169,8 @@ impl TransferFnFirstOrder {
     pub fn new(a1: Time, 
         b1: Ratio, 
         a2: Time,
-        b2: Ratio) -> Result<Self,ChemEngProcessControlSimulatorError> {
+        b2: Ratio,
+        dead_time: Time) -> Result<Self,ChemEngProcessControlSimulatorError> {
         // process time 
         let tau_p: Time = a2/b2;
 
@@ -192,7 +193,26 @@ impl TransferFnFirstOrder {
 
         } else {
             // stable system
-            todo!("stbale system, not implemented yet");
+            let first_ord_transfer_fn_no_zeroes = FirstOrderStableTransferFnNoZeroes::
+                new(
+                    k_p,
+                    tau_p,
+                    Ratio::ZERO,
+                    Ratio::ZERO,
+                    dead_time,
+                )?;
+            let first_ord_transfer_fn_for_zeroes = FirstOrderStableTransferFnForZeroes::
+                new(
+                    k_p_for_zero,
+                    tau_p,
+                    Ratio::ZERO,
+                    Ratio::ZERO,
+                    dead_time,
+                )?;
+
+            return Ok(Self::Stable(
+                    first_ord_transfer_fn_no_zeroes, 
+                    first_ord_transfer_fn_for_zeroes));
         }
 
 
