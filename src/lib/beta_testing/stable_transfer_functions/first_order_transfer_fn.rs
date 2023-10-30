@@ -3,20 +3,20 @@ use uom::{si::{f64::*, time::second, ratio::ratio}, ConstZero};
 use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
 
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
-pub struct FirstOrderStableTransferFn {
-    process_gain: Ratio,
-    process_time: Time,
-    previous_timestep_input: Ratio,
+pub struct FirstOrderStableTransferFnNoZeroes {
+    pub(crate) process_gain: Ratio,
+    pub(crate) process_time: Time,
+    pub(crate) previous_timestep_input: Ratio,
     /// previous timestep output
-    offset: Ratio,
+    pub(crate) offset: Ratio,
     /// delay
-    delay: Time,
+    pub(crate) delay: Time,
 
     /// vector of first order responses 
-    response_vec: Vec<FirstOrderResponse>,
+    pub(crate) response_vec: Vec<FirstOrderResponse>,
 }
 
-impl Default for FirstOrderStableTransferFn {
+impl Default for FirstOrderStableTransferFnNoZeroes {
     /// default is: 
     ///
     /// 1 / (s + 1)
@@ -24,7 +24,7 @@ impl Default for FirstOrderStableTransferFn {
     /// with initial user input of 0.0 
     /// and initial user value of 0.0
     fn default() -> Self {
-        FirstOrderStableTransferFn { 
+        FirstOrderStableTransferFnNoZeroes { 
             process_gain: Ratio::new::<ratio>(1.0), 
             process_time: Time::new::<second>(1.0), 
             previous_timestep_input: Ratio::new::<ratio>(0.0), 
@@ -35,7 +35,7 @@ impl Default for FirstOrderStableTransferFn {
     }
 }
 
-impl FirstOrderStableTransferFn {
+impl FirstOrderStableTransferFnNoZeroes {
 
     /// constructors 
     pub fn new(process_gain: Ratio,
@@ -48,7 +48,7 @@ impl FirstOrderStableTransferFn {
             return Err(ChemEngProcessControlSimulatorError::
                 UnstableDampingFactorForStableTransferFunction);
         }
-        Ok(FirstOrderStableTransferFn { 
+        Ok(FirstOrderStableTransferFnNoZeroes { 
             process_gain, 
             process_time, 
             previous_timestep_input: initial_input, 
@@ -67,7 +67,7 @@ impl FirstOrderStableTransferFn {
             return Err(ChemEngProcessControlSimulatorError::
                 UnstableDampingFactorForStableTransferFunction);
         }
-        Ok(FirstOrderStableTransferFn { 
+        Ok(FirstOrderStableTransferFnNoZeroes { 
             process_gain: Ratio::new::<ratio>(1.0), 
             process_time, 
             previous_timestep_input: initial_input, 

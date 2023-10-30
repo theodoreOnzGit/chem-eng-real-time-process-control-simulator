@@ -2,7 +2,7 @@ use csv::Writer;
 use uom::si::ratio::ratio;
 use uom::si::f64::*;
 use uom::si::time::second;
-use uom::{ConstZero};
+use uom::ConstZero;
 
 use crate::beta_testing::TimeSquared;
 use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;

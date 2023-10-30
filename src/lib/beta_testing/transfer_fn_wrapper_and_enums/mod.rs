@@ -3,7 +3,7 @@ use uom::si::f64::*;
 /// generic enum for a Transfer Function
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub enum TransferFn {
-    FirstOrder,
+    FirstOrder(TransferFnFirstOrder),
     SecondOrder(TransferFnSecondOrder),
 }
 
@@ -16,7 +16,7 @@ impl Default for TransferFn {
 impl TransferFnTraits for TransferFn {
     fn set_dead_time(&mut self, dead_time: Time) {
         match self {
-            TransferFn::FirstOrder => todo!(),
+            TransferFn::FirstOrder(first_order) => todo!(),
             TransferFn::SecondOrder(second_order) => {
                 second_order.set_dead_time(dead_time)
             },
@@ -29,7 +29,7 @@ impl TransferFnTraits for TransferFn {
         time_of_input: Time) -> 
     Result<Ratio, ChemEngProcessControlSimulatorError> {
         match self {
-            TransferFn::FirstOrder => todo!(),
+            TransferFn::FirstOrder(first_order) => todo!(),
             TransferFn::SecondOrder(second_order) => {
                 second_order.set_user_input_and_calc(user_input, time_of_input)
             },
@@ -39,7 +39,7 @@ impl TransferFnTraits for TransferFn {
     fn spawn_writer(&mut self, name: String) -> Result<Writer<std::fs::File>,
     ChemEngProcessControlSimulatorError>{
         match self {
-            TransferFn::FirstOrder => todo!(),
+            TransferFn::FirstOrder(first_order) => todo!(),
             TransferFn::SecondOrder(second_order) => {
                 second_order.spawn_writer(name)
             },
@@ -53,7 +53,7 @@ impl TransferFnTraits for TransferFn {
         output: Ratio) -> Result<(), 
     ChemEngProcessControlSimulatorError> {
         match self {
-            TransferFn::FirstOrder => todo!(),
+            TransferFn::FirstOrder(first_order) => todo!(),
             TransferFn::SecondOrder(second_order) => {
                 second_order.csv_write_values(wtr, time,
                     input, output)
@@ -87,6 +87,8 @@ pub trait TransferFnTraits {
 
 pub mod generic_second_order;
 pub use generic_second_order::TransferFnSecondOrder;
+pub mod generic_first_order;
+pub use generic_first_order::TransferFnFirstOrder;
 
 use super::errors::ChemEngProcessControlSimulatorError;
 
