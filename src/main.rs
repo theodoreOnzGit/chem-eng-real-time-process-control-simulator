@@ -9,5 +9,6 @@ fn main() {
     examples::second_order_demos::demo_complex_stable_underdamped_second_order_simulation();
     examples::first_order_demos::stable_first_order_with_delay_simulation_no_zeroes();
     examples::first_order_demos::stable_first_order_with_delay_simulation_with_zeroes();
+    examples::generic_transfer_fn_demos::stable_second_order_simulation_with_delay();
 }
 
