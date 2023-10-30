@@ -6,6 +6,7 @@ use uom::ConstZero;
 
 use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
 use crate::beta_testing::stable_transfer_functions::first_order_transfer_fn::FirstOrderStableTransferFnNoZeroes;
+use crate::beta_testing::stable_transfer_functions::first_order_transfer_fn_with_zeroes::FirstOrderStableTransferFnForZeroes;
 
 use super::{TransferFn, TransferFnTraits};
 
@@ -25,6 +26,28 @@ use super::{TransferFn, TransferFnTraits};
 /// 1. Stable 
 /// 2. Undamped (constant value)
 /// 3. Unstable
+///
+/// Now this is actually a summation of two first order transfer 
+/// functions and some offset
+///
+/// let Kp = b1/b2
+/// let tau_p = a2/b2
+///
+/// we get:
+///
+/// G(s) = 
+///
+///     Kp          a1        /             1          \
+/// ----------- + ----------- |  1 -  ---------------- |
+/// tau_p s + 1   b2 * taup   \        taup s + 1      /
+///
+///
+/// The first term is taken care of by a 
+/// FirstOrderStableTransferFnNoZeroes,
+///
+/// the second term, is there due to the zeroes, therefore 
+/// it is take care of by 
+/// FirstOrderStableTransferFnForZeroes
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub enum TransferFnFirstOrder {
     /// this is arranged in the order
@@ -32,7 +55,7 @@ pub enum TransferFnFirstOrder {
     /// cosine_term,
     /// sine_term
     Stable(FirstOrderStableTransferFnNoZeroes,
-        FirstOrderStableTransferFnNoZeroes),
+        FirstOrderStableTransferFnForZeroes),
         Unstable,
         ConstantValueUndamped,
 }
