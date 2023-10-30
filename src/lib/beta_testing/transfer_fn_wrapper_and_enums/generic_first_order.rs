@@ -31,7 +31,8 @@ pub enum TransferFnFirstOrder {
     /// no_zero_transfer_fn,
     /// cosine_term,
     /// sine_term
-    Stable(FirstOrderStableTransferFnNoZeroes),
+    Stable(FirstOrderStableTransferFnNoZeroes,
+        FirstOrderStableTransferFnNoZeroes),
         Unstable,
         ConstantValueUndamped,
 }
@@ -47,9 +48,11 @@ impl TransferFnTraits for TransferFnFirstOrder {
 
         match self {
             TransferFnFirstOrder::Stable(
-                transfer_fn_no_zeroes) => {
+                transfer_fn_no_zeroes,
+                transfer_fn_for_zeroes) => {
                     // have to test if this works correctly
                     transfer_fn_no_zeroes.delay = dead_time;
+                    transfer_fn_for_zeroes.delay = dead_time;
 
             },
             TransferFnFirstOrder::Unstable => todo!(),
@@ -64,18 +67,23 @@ impl TransferFnTraits for TransferFnFirstOrder {
 
         match self {
             TransferFnFirstOrder::Stable(
-                first_order) => {
+                first_order_no_zeroes,
+                first_order_zeroes) => {
                     let mut response: Ratio = Ratio::ZERO;
 
                     let first_order_output_1 = 
-                    first_order.set_user_input_and_calc_output(
+                    first_order_no_zeroes.set_user_input_and_calc_output(
                         time, user_input)?;
 
+                    let first_order_output_2 = 
+                    first_order_zeroes.set_user_input_and_calc_output(
+                        time, user_input)?;
                     //dbg!(sine_decaying_output);
                     //dbg!(cosine_decaying_output);
                     //dbg!(tf_no_zeroes_output);
 
                     response += first_order_output_1;
+                    response += first_order_output_2;
                     return Ok(response);
 
                 },
@@ -89,8 +97,8 @@ impl TransferFnTraits for TransferFnFirstOrder {
     ChemEngProcessControlSimulatorError>{
         let mut title_string: String = name;
         match self {
-            TransferFnFirstOrder::Stable(_) => {
-                title_string += "2nd_ord_transfer_fn_stable_underdamped.csv";
+            TransferFnFirstOrder::Stable(_,_) => {
+                title_string += "1st_ord_transfer_fn_stable_underdamped.csv";
             },
             TransferFnFirstOrder::Unstable => todo!(),
             TransferFnFirstOrder::ConstantValueUndamped => todo!(),
