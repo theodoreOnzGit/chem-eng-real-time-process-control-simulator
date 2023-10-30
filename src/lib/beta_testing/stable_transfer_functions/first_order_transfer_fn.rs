@@ -1,14 +1,14 @@
-use uom::si::{f64::*, time::second};
+use uom::{si::{f64::*, time::second, ratio::ratio}, ConstZero};
 
 use crate::beta_testing::errors::ChemEngProcessControlSimulatorError;
 
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub struct FirstOrderStableTransferFn {
-    process_gain: f64,
+    process_gain: Ratio,
     process_time: Time,
-    previous_timestep_input: f64,
+    previous_timestep_input: Ratio,
     /// previous timestep output
-    offset: f64,
+    offset: Ratio,
     /// delay
     delay: Time,
 
@@ -25,10 +25,10 @@ impl Default for FirstOrderStableTransferFn {
     /// and initial user value of 0.0
     fn default() -> Self {
         FirstOrderStableTransferFn { 
-            process_gain: 1.0, 
+            process_gain: Ratio::new::<ratio>(1.0), 
             process_time: Time::new::<second>(1.0), 
-            previous_timestep_input: 0.0, 
-            offset: 0.0, 
+            previous_timestep_input: Ratio::new::<ratio>(0.0), 
+            offset: Ratio::new::<ratio>(0.0), 
             delay: Time::new::<second>(0.0), 
             response_vec: vec![],
         }
@@ -38,10 +38,10 @@ impl Default for FirstOrderStableTransferFn {
 impl FirstOrderStableTransferFn {
 
     /// constructors 
-    pub fn new(process_gain: f64,
+    pub fn new(process_gain: Ratio,
         process_time: Time,
-        initial_input: f64,
-        initial_value: f64,
+        initial_input: Ratio,
+        initial_value: Ratio,
         delay: Time,) -> Result<Self, ChemEngProcessControlSimulatorError> {
 
         if process_time.get::<second>() <= 0.0 {
@@ -60,15 +60,15 @@ impl FirstOrderStableTransferFn {
 
     /// first order filter 
     pub fn new_filter(process_time: Time,
-        initial_input: f64,
-        initial_value: f64) -> Result<Self, ChemEngProcessControlSimulatorError> {
+        initial_input: Ratio,
+        initial_value: Ratio) -> Result<Self, ChemEngProcessControlSimulatorError> {
 
         if process_time.get::<second>() <= 0.0 {
             return Err(ChemEngProcessControlSimulatorError::
                 UnstableDampingFactorForStableTransferFunction);
         }
         Ok(FirstOrderStableTransferFn { 
-            process_gain: 1.0, 
+            process_gain: Ratio::new::<ratio>(1.0), 
             process_time, 
             previous_timestep_input: initial_input, 
             offset: initial_value, 
@@ -80,15 +80,16 @@ impl FirstOrderStableTransferFn {
     /// sets the user input to some value
     pub fn set_user_input_and_calc_output(&mut self, 
         current_time: Time,
-        current_input: f64) 
-    -> Result<f64, ChemEngProcessControlSimulatorError> {
+        current_input: Ratio) 
+    -> Result<Ratio, ChemEngProcessControlSimulatorError> {
         // check if input is equal to current input 
 
         // case where input is not the same to 9 decimal places
 
         let input_changed: bool = 
-            (current_input * 1e9).round() 
-            - (self.previous_timestep_input.clone()*1e9).round() != 0.0 ;
+            (current_input.get::<ratio>() * 1e9).round() 
+            - (self.previous_timestep_input.clone()
+                .get::<ratio>()*1e9).round() != 0.0 ;
 
         if input_changed {
             // need to add a response to the vector
@@ -130,7 +131,7 @@ impl FirstOrderStableTransferFn {
         // + offset
         // first we add the offset
 
-        let summation_of_responses: f64 = self.response_vec.
+        let summation_of_responses: Ratio = self.response_vec.
             iter_mut().map(
                 |first_order_response|{
                     first_order_response.calculate_response(current_time)}
@@ -238,20 +239,20 @@ impl FirstOrderStableTransferFn {
 /// u1(t - t1) * Kp * [1-exp(- [t-t1] / tau])
 #[derive(Debug,PartialEq, PartialOrd, Clone, Copy)]
 pub struct FirstOrderResponse {
-    process_gain: f64,
+    process_gain: Ratio,
     process_time: Time,
     start_time: Time,
-    user_input: f64,
+    user_input: Ratio,
     current_time: Time,
 }
 
 impl Default for FirstOrderResponse {
     fn default() -> Self {
         FirstOrderResponse { 
-            process_gain: 1.0, 
+            process_gain: Ratio::new::<ratio>(1.0), 
             process_time: Time::new::<second>(1.0), 
             start_time: Time::new::<second>(0.0), 
-            user_input: 1.0, 
+            user_input: Ratio::new::<ratio>(1.0), 
             current_time: Time::new::<second>(0.0),
         }
     }
@@ -262,10 +263,10 @@ impl FirstOrderResponse {
 
     /// constructor 
     pub fn new(
-        process_gain: f64,
+        process_gain: Ratio,
         process_time: Time,
         start_time: Time,
-        user_input: f64,
+        user_input: Ratio,
         current_time: Time,) -> Result<Self, ChemEngProcessControlSimulatorError> {
         if process_time.get::<second>() <= 0.0 {
             return Err(ChemEngProcessControlSimulatorError::
@@ -303,7 +304,7 @@ impl FirstOrderResponse {
     /// calculates the response of the first order system
     /// at a given time
     /// u1(t - t1) * Kp * [1-exp(- [t-t1] / tau])
-    pub fn calculate_response(&mut self, simulation_time: Time) -> f64 {
+    pub fn calculate_response(&mut self, simulation_time: Time) -> Ratio {
 
         // get the current time (t - t0)
         self.current_time = simulation_time;
@@ -316,7 +317,7 @@ impl FirstOrderResponse {
         // if the current time is before start time, no response 
         // from this transfer function
         if !heaviside_on {
-            return 0.0;
+            return Ratio::ZERO;
         }
 
         let time_ratio: Ratio = time_elapsed /  self.process_time;
@@ -325,7 +326,7 @@ impl FirstOrderResponse {
         // otherwise, calculate as per normal
 
         // u1(t - t1) * Kp * [1-exp(- [t-t1] / tau])
-        let response: f64 = self.steady_state_value()
+        let response: Ratio = self.steady_state_value()
             * (1.0 - exponent_ratio.exp());
 
         return response;
@@ -333,8 +334,8 @@ impl FirstOrderResponse {
 
     /// steady state value 
     /// u1(t - t1) * Kp 
-    pub fn steady_state_value(&self) -> f64 {
-        let response: f64 = self.user_input * self.process_gain;
+    pub fn steady_state_value(&self) -> Ratio {
+        let response: Ratio = self.user_input * self.process_gain;
         response
     }
 }
