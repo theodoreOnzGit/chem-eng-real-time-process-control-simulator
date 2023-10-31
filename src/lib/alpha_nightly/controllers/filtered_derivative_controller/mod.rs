@@ -27,7 +27,7 @@ impl FilteredDerivativeController {
     /// G(s) = K_c * (tau_d s) / (alpha tau_d s + 1)
     pub fn new(controller_gain: Ratio,
         derivative_time: Time,
-        alpha: Ratio) -> Self {
+        alpha: Ratio) -> Result<Self, ChemEngProcessControlSimulatorError> {
 
         // G(s) = (a1 s + b1)/(a2 s + b2)
         //
@@ -41,7 +41,7 @@ impl FilteredDerivativeController {
         let a2 = derivative_time * alpha;
         let transfer_fn = TransferFnFirstOrder::new(a1, b1, a2, b2).unwrap();
 
-        Self { transfer_fn }
+        Ok(Self { transfer_fn })
     }
 }
 

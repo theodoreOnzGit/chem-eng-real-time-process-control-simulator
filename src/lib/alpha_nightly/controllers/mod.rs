@@ -1,12 +1,13 @@
-
 use csv::Writer;
 use uom::si::ratio::ratio;
 use uom::si::time::second;
+use uom::si::f64::*;
 
 pub use self::integral_controller::IntegralController;
 pub use self::proportional_controller::ProportionalController;
 pub use self::filtered_derivative_controller::FilteredDerivativeController;
 
+use super::errors::ChemEngProcessControlSimulatorError;
 use super::transfer_fn_wrapper_and_enums::TransferFnTraits;
 pub(crate) mod proportional_controller;
 pub mod integral_controller;
@@ -19,6 +20,33 @@ pub enum Controller {
     PI(ProportionalController,IntegralController),
     P(ProportionalController),
     IntegralStandalone(IntegralController),
+}
+
+impl Controller {
+    pub fn new_pi_controller(controller_gain: Ratio,
+        integral_time: Time) -> Result<Self,ChemEngProcessControlSimulatorError> {
+
+        let p_controller = ProportionalController::new(controller_gain)?;
+        let i_controller = IntegralController::new(controller_gain,
+            integral_time)?;
+
+        Ok(Self::PI(p_controller, i_controller))
+    }
+
+    pub fn new_filtered_pid_controller(controller_gain: Ratio,
+        integral_time: Time,
+        derivative_time: Time,
+        alpha: Ratio,
+    ) -> Result<Self,ChemEngProcessControlSimulatorError> {
+
+        let p_controller = ProportionalController::new(controller_gain)?;
+        let i_controller = IntegralController::new(controller_gain,
+            integral_time)?;
+        let d_controller = FilteredDerivativeController::new(
+            controller_gain, derivative_time, alpha)?;
+
+        Ok(Self::PIDFiltered(p_controller, i_controller, d_controller))
+    }
 }
 
 impl TransferFnTraits for Controller {

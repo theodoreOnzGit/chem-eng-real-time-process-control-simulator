@@ -26,7 +26,7 @@ impl ProportionalController {
     /// a filtered derivative controller 
     /// in the form:
     /// G(s) = K_c 
-    pub fn new(controller_gain: Ratio) -> Self {
+    pub fn new(controller_gain: Ratio) -> Result<Self,ChemEngProcessControlSimulatorError> {
 
         // G(s) = (a1 s + b1)/(a2 s + b2)
         //
@@ -40,7 +40,7 @@ impl ProportionalController {
         let b2 = Ratio::new::<ratio>(1.0);
         let transfer_fn = TransferFnFirstOrder::new(a1, b1, a2, b2).unwrap();
 
-        Self { transfer_fn }
+        Ok(Self { transfer_fn })
     }
 }
 impl Default for ProportionalController {
