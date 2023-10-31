@@ -24,8 +24,11 @@ pub struct IntegralController{
 }
 
 impl Default for IntegralController {
+
+    /// returns 1/s
     fn default() -> Self {
-        todo!()
+        Self::new(Ratio::new::<ratio>(1.0), 
+            Time::new::<second>(1.0)).unwrap()
     }
 }
 
