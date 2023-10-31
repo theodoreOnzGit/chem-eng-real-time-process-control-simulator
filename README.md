@@ -11,8 +11,6 @@ To watch:
 cargo watch -x run --ignore "*.csv"
 ```
 
-<<<<<<< HEAD
-=======
 ## Documentation
 
 TBD. Theory of basic items is in my PhD thesis (to be published later).
@@ -43,4 +41,3 @@ limitations under the License.
 I use crates such as approx, csv, thiserror and uom. The licenses 
 are located in the licenses_of_dependencies folder.
 
->>>>>>> main

@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 /// Copyright [2023] [Theodore Kay Chen Ong, Professor Per F. Peterson,
 /// Thermal Hydraulics Lab, Repository Contributors and 
 /// Singapore Nuclear Research and Safety Initiative (SNRSI)]
@@ -7,7 +5,6 @@
 /// Licensed under the Apache License, Version 2.0 (the "License");
 /// you may not use this file except in compliance with the License.
 /// You may obtain a copy of the License at
->>>>>>> main
 pub mod prelude;
 pub(crate) mod stable_transfer_functions;
 pub(crate) mod controllers;

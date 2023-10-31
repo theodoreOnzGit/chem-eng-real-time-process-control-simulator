@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 /// Copyright [2023] [Theodore Kay Chen Ong, Professor Per F. Peterson,
 /// University of California, Berkeley
 /// Thermal Hydraulics Lab, Repository Contributors and 
@@ -16,7 +14,6 @@
 /// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 /// See the License for the specific language governing permissions and
 /// limitations under the License.
->>>>>>> main
 pub mod alpha_nightly;
 pub mod beta_testing;
 pub mod stable;
