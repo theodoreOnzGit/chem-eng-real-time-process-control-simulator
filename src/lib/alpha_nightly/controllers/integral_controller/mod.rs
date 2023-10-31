@@ -21,8 +21,8 @@ pub struct IntegralController{
 
     /// offset for ramp function calculations
     pub(crate) offset: Ratio,
-    /// current ramp function gradient
-    pub(crate) ramp_function_gradient: Ratio,
+    /// current ramp function
+    pub(crate) ramp_fn: RampResponse,
 }
 
 impl Default for IntegralController {
@@ -51,10 +51,7 @@ impl TransferFnTraits for IntegralController {
 
 
         if input_changed {
-            // need to adjust offset and gradient immediately
-
-
-
+            // add to ramp response vector
             // then we need to change the previous_timestep_input 
             // to the current input value 
             self.previous_timestep_input = user_input;
