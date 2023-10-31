@@ -181,7 +181,7 @@ impl RampResponseRealTime {
         if input_changed {
             let k_c = self.controller_gain;
             let tau_i = self.integral_time;
-            let a_i = user_input;
+            let a_i = user_input - self.previous_timestep_input;
 
             let gradient_change: Frequency = a_i * k_c/tau_i;
             let offset_change: Ratio = -a_i*time_of_input *k_c/tau_i;

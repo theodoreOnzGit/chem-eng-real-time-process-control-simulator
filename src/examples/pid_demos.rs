@@ -29,8 +29,6 @@ use uom::si::time::second;
 /// controller 1/s
 pub(crate) fn integral_controller_ramp_test(){
 
-    use uom::si::{Quantity, ISQ, SI};
-    use uom::typenum::*;
     let one_second = Time::new::<second>(1.0);
 
     let integral_time: Time = one_second;
@@ -43,9 +41,6 @@ pub(crate) fn integral_controller_ramp_test(){
         IntegralController::new(controller_gain,
             integral_time).unwrap();
 
-    let mut integral_controller_ramp = RampResponseRealTime::new(
-        integral_time,
-        controller_gain).unwrap();
     //
     // if you need to set initial values
     // because the transfer function only measures deviations from 
@@ -72,20 +67,21 @@ pub(crate) fn integral_controller_ramp_test(){
         // at 15s onwards, input is -1
 
         if current_simulation_time <= Time::ZERO {
+            // do nothing, leave it at zero
+        } else if current_simulation_time < Time::new::<second>(5.0) {
             user_input = Ratio::ZERO;
-        } else if current_simulation_time <= Time::new::<second>(5.0) {
-            user_input = Ratio::ZERO;
-        } else if current_simulation_time <= Time::new::<second>(10.0) {
+        } else if current_simulation_time < Time::new::<second>(10.0) {
             user_input = Ratio::new::<ratio>(1.0);
-        } else if current_simulation_time <= Time::new::<second>(15.0) {
+        } else if current_simulation_time < Time::new::<second>(15.0) {
             user_input = Ratio::new::<ratio>(2.5);
         } else {
             user_input = Ratio::new::<ratio>(-1.0);
         }
 
-        let output = integral_controller_ramp.set_user_input_and_calc(
+        let output = integral_controller_for_writing.set_user_input_and_calc(
             user_input, current_simulation_time).unwrap();
 
+        // write 
         let writer_borrow = &mut wtr;
         integral_controller_for_writing.csv_write_values(
             writer_borrow, current_simulation_time, 
