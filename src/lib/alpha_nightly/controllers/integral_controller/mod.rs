@@ -22,7 +22,9 @@ pub struct IntegralController{
     /// offset for ramp function calculations
     pub(crate) offset: Ratio,
     /// current ramp function
-    pub(crate) ramp_fn: RampResponse,
+    pub(crate) main_ramp_fn: RampResponse,
+    /// vector of delayed ramp functions 
+    pub(crate) delayed_ramp_fn_vectors: Vec<RampResponse>,
 }
 
 impl Default for IntegralController {
@@ -51,7 +53,23 @@ impl TransferFnTraits for IntegralController {
 
 
         if input_changed {
-            // add to ramp response vector
+            // add to the delayed ramp response vector
+            
+            let ramp_fn_gain_gradient: Frequency = 
+                self.controller_gain /  self.integral_time;
+            let ramp_fn_start_time: Time = time_of_input + 
+                self.delay;
+            let ramp_fn_user_input: Ratio = user_input;
+            let ramp_fn_current_time = time_of_input;
+
+            let new_ramp_response = RampResponse::new(
+                ramp_fn_gain_gradient, 
+                ramp_fn_start_time, 
+                user_input, 
+                ramp_fn_current_time)?;
+
+            self.delayed_ramp_fn_vectors.push(new_ramp_response);
+
             // then we need to change the previous_timestep_input 
             // to the current input value 
             self.previous_timestep_input = user_input;
@@ -59,10 +77,20 @@ impl TransferFnTraits for IntegralController {
             // then we are done!
             
         }
+        // clean up vector first 
+        self.clear_ramp_response_vector(time_of_input);
+        let summation_of_responses: Ratio = self.delayed_ramp_fn_vectors.
+            iter_mut().map(
+                |first_order_response|{
+                    first_order_response.calculate_response(time_of_input)}
+            ).sum();
 
-        todo!()
+        let output = self.offset + summation_of_responses;
+
+        return Ok(output);
 
     }
+
 
     fn spawn_writer(&mut self, name: String) -> Result<csv::Writer<std::fs::File>,
     ChemEngProcessControlSimulatorError> {
@@ -76,6 +104,125 @@ impl TransferFnTraits for IntegralController {
         output: Ratio) -> Result<(), 
     ChemEngProcessControlSimulatorError> {
         todo!()
+    }
+}
+
+impl IntegralController {
+
+    /// for integral controllers, the algorithm is similar to the 
+    /// first order decay type 
+    /// 
+    /// However, instead of waiting for the functions to decay out,
+    ///
+    /// we wait for about 5seconds after the ramp functions start
+    /// after 5s, we take that response and use it to change 
+    /// the current main ramp function
+    ///
+    /// so, after 5s, we consider the result "stabilised"
+    fn clear_ramp_response_vector(&mut self, time_of_input: Time){
+
+
+        let index_of_stabilised_result = self.delayed_ramp_fn_vectors.iter_mut().position(
+            |ramp_fn_response| {
+                ramp_fn_response.current_time = time_of_input;
+                ramp_fn_response.is_started_for_5s()
+            }
+        );
+
+        match index_of_stabilised_result {
+
+            // if I found something at the index, remove it, 
+            // repeatedly test it until nothing is left
+            Some(index) => {
+                // first get the current value of the ramp response 
+                // and add it to the offset
+                let mut ramp_fn_response = 
+                    self.delayed_ramp_fn_vectors[index].clone();
+                let current_value_of_ramp_response = 
+                    ramp_fn_response.calculate_response(
+                        time_of_input);
+                self.offset += current_value_of_ramp_response;
+
+                // second, I adjust the gradient of the main 
+                // ramp response 
+
+                let ramp_fn_gradient = ramp_fn_response.gradient_gain;
+                self.main_ramp_fn.gradient_gain += ramp_fn_gradient;
+
+                // then i remove the first order response from the 
+                // index
+                self.delayed_ramp_fn_vectors.remove(index);
+            },
+
+            // if no vectors reach steady state, exit
+            // with no issue
+            None => return,
+        }
+
+        // now, we have cleared the vector once, if there are other 
+        // times we need to clear the vector, then we enter a loop
+
+        let index_of_stabilised_result = self.delayed_ramp_fn_vectors.iter_mut().position(
+            |ramp_fn_response| {
+                ramp_fn_response.current_time = time_of_input;
+                ramp_fn_response.is_started_for_5s()
+            }
+        );
+        // check if steady state responses are present
+        let mut stabilised_responses_present = 
+            match index_of_stabilised_result {
+                Some(_) => true,
+                None => false,
+            };
+        
+        if !stabilised_responses_present {
+            return;
+        } 
+
+        // repeatedly clear the vector until no steady state responses 
+        // are left
+        while stabilised_responses_present {
+
+            // check for index
+            let index_of_steady_state_result = self.delayed_ramp_fn_vectors.iter_mut().position(
+                |ramp_fn_response| {
+                    ramp_fn_response.current_time = time_of_input;
+                    ramp_fn_response.is_started_for_5s()
+                }
+            );
+
+            stabilised_responses_present = match index_of_steady_state_result {
+                Some(index) => {
+                    // first get the current value of the ramp response 
+                    // and add it to the offset
+                    let mut ramp_fn_response = 
+                        self.delayed_ramp_fn_vectors[index].clone();
+                    let current_value_of_ramp_response = 
+                        ramp_fn_response.calculate_response(
+                            time_of_input);
+                    self.offset += current_value_of_ramp_response;
+
+                    // second, I adjust the gradient of the main 
+                    // ramp response 
+
+                    let ramp_fn_gradient = ramp_fn_response.gradient_gain;
+                    self.main_ramp_fn.gradient_gain += ramp_fn_gradient;
+
+                    // then i remove the first order response from the 
+                    // index
+                    self.delayed_ramp_fn_vectors.remove(index);
+
+
+                    // return true value to while loop
+                    true
+                },
+                // return false value to while loop
+                None => false,
+            };
+
+        }
+        return;
+
     }
 }
 
@@ -128,7 +275,8 @@ impl RampResponse {
     }
 
     /// calculates the current value of the ramp response 
-    pub fn calculate_response(&mut self, simulation_time:Time)
+    pub fn calculate_response(&mut self, 
+        simulation_time: Time)
         -> Ratio {
 
             // get the current time (t - t0)
@@ -153,5 +301,22 @@ impl RampResponse {
 
         }
 
+    /// checks if ramp function is past its dead time
+    /// for 5s or more
+    pub fn is_started_for_5s(&self) -> bool {
+            let time_elapsed = self.current_time - self.start_time;
+
+            let turned_on_for_5s: bool = self.current_time >= 
+                (self.start_time + Time::new::<second>(5.0));
+
+
+            // if the current time is before start time, no response 
+            // from this transfer function
+            if !turned_on_for_5s {
+                return false;
+            }
+
+            return true;
+    }
 
 }
