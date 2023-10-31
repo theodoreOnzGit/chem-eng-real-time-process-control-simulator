@@ -7,6 +7,8 @@ use uom::si::ratio::ratio;
 use uom::si::time::second;
 use crate::alpha_nightly::errors::ChemEngProcessControlSimulatorError;
 
+use super::Controller;
+
 /// Integral controller with transfer function
 ///
 /// G(s) = K_c / (tau_I s)
@@ -333,4 +335,10 @@ impl RampResponse {
             return true;
     }
 
+}
+
+impl Into<Controller> for IntegralController {
+    fn into(self) -> Controller {
+        Controller::IntegralStandalone(self)
+    }
 }
