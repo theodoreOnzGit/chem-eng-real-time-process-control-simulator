@@ -14,6 +14,7 @@ use crate::alpha_nightly::errors::ChemEngProcessControlSimulatorError;
 /// Therefore, I'll just have this struct house a transfer function
 ///
 ///
+#[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub struct FilteredDerivativeController{
     pub transfer_fn: TransferFnFirstOrder,
 }
