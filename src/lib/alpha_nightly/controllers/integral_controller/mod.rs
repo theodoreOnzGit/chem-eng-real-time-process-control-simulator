@@ -88,7 +88,11 @@ impl TransferFnTraits for IntegralController {
                     first_order_response.calculate_response(time_of_input)}
             ).sum();
 
-        let output = self.offset + summation_of_responses;
+        let main_ramp_fn_response = self.main_ramp_fn.calculate_response(
+            time_of_input);
+
+        let output = self.offset + summation_of_responses + 
+            main_ramp_fn_response;
 
         return Ok(output);
 
@@ -98,7 +102,7 @@ impl TransferFnTraits for IntegralController {
     fn spawn_writer(&mut self, name: String) -> Result<csv::Writer<std::fs::File>,
     ChemEngProcessControlSimulatorError> {
         let mut title_string: String = name;
-        title_string += "_integral_controller";
+        title_string += "_integral_controller.csv";
         let wtr = Writer::from_path(title_string)?;
         Ok(wtr)
     }
@@ -125,23 +129,46 @@ impl TransferFnTraits for IntegralController {
 
 impl IntegralController {
 
+    /// integral controller in the form: 
+    ///
+    /// G(s) = Kc / (tau_I s)
+    pub fn new(controller_gain: Ratio,
+        integral_time: Time) -> Result<Self,ChemEngProcessControlSimulatorError> {
+
+        let main_ramp_fn: RampResponse = 
+            RampResponse::new(
+                Frequency::ZERO, 
+                Time::ZERO, 
+                Ratio::ZERO, 
+                Time::ZERO)?;
+
+        Ok(Self { controller_gain,
+            integral_time,
+            delay: Time::ZERO,
+            previous_timestep_input: Ratio::ZERO,
+            offset: Ratio::ZERO,
+            main_ramp_fn,
+            delayed_ramp_fn_vectors: vec![]
+        })
+    }
+
     /// for integral controllers, the algorithm is similar to the 
     /// first order decay type 
     /// 
     /// However, instead of waiting for the functions to decay out,
     ///
-    /// we wait for about 5seconds after the ramp functions start
-    /// after 5s, we take that response and use it to change 
+    /// we wait for about 1seconds after the ramp functions start
+    /// after 1s, we take that response and use it to change 
     /// the current main ramp function
     ///
-    /// so, after 5s, we consider the result "stabilised"
+    /// so, after 1s, we consider the result "stabilised"
     fn clear_ramp_response_vector(&mut self, time_of_input: Time){
 
 
         let index_of_stabilised_result = self.delayed_ramp_fn_vectors.iter_mut().position(
             |ramp_fn_response| {
                 ramp_fn_response.current_time = time_of_input;
-                ramp_fn_response.is_started_for_5s()
+                ramp_fn_response.is_started_for_1s()
             }
         );
 
@@ -162,8 +189,10 @@ impl IntegralController {
                 // second, I adjust the gradient of the main 
                 // ramp response 
 
-                let ramp_fn_gradient = ramp_fn_response.gradient_gain;
-                self.main_ramp_fn.gradient_gain += ramp_fn_gradient;
+                let ramp_fn_prevailing_gradient = 
+                    ramp_fn_response.gradient_gain
+                    * ramp_fn_response.user_input;
+                self.main_ramp_fn.gradient_gain += ramp_fn_prevailing_gradient;
 
                 // then i remove the first order response from the 
                 // index
@@ -181,7 +210,7 @@ impl IntegralController {
         let index_of_stabilised_result = self.delayed_ramp_fn_vectors.iter_mut().position(
             |ramp_fn_response| {
                 ramp_fn_response.current_time = time_of_input;
-                ramp_fn_response.is_started_for_5s()
+                ramp_fn_response.is_started_for_1s()
             }
         );
         // check if steady state responses are present
@@ -203,7 +232,7 @@ impl IntegralController {
             let index_of_steady_state_result = self.delayed_ramp_fn_vectors.iter_mut().position(
                 |ramp_fn_response| {
                     ramp_fn_response.current_time = time_of_input;
-                    ramp_fn_response.is_started_for_5s()
+                    ramp_fn_response.is_started_for_1s()
                 }
             );
 
@@ -221,8 +250,10 @@ impl IntegralController {
                     // second, I adjust the gradient of the main 
                     // ramp response 
 
-                    let ramp_fn_gradient = ramp_fn_response.gradient_gain;
-                    self.main_ramp_fn.gradient_gain += ramp_fn_gradient;
+                    let ramp_fn_prevailing_gradient = 
+                        ramp_fn_response.gradient_gain
+                        * ramp_fn_response.user_input;
+                    self.main_ramp_fn.gradient_gain += ramp_fn_prevailing_gradient;
 
                     // then i remove the first order response from the 
                     // index
@@ -318,17 +349,18 @@ impl RampResponse {
         }
 
     /// checks if ramp function is past its dead time
-    /// for 5s or more
-    pub fn is_started_for_5s(&self) -> bool {
+    /// for 1s or more
+    pub fn is_started_for_1s(&self) -> bool {
             let time_elapsed = self.current_time - self.start_time;
 
-            let turned_on_for_5s: bool = self.current_time >= 
-                (self.start_time + Time::new::<second>(5.0));
+            let turned_on_for_1s: bool = time_elapsed >= 
+                Time::new::<second>(1.0);
 
+            
 
             // if the current time is before start time, no response 
             // from this transfer function
-            if !turned_on_for_5s {
+            if !turned_on_for_1s {
                 return false;
             }
 
