@@ -13,7 +13,7 @@ pub(crate) mod proportional_controller;
 pub mod integral_controller;
 pub(crate) mod filtered_derivative_controller;
 
-/// generic enum for a Transfer Function
+/// generic enum for a Continuous Time Controller
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub enum Controller {
     PIDFiltered(ProportionalController,IntegralController,FilteredDerivativeController),
