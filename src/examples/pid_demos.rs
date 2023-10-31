@@ -42,7 +42,8 @@ pub(crate) fn proportional_integral_test(){
     let integral_time: Time = controller_gain / Frequency::new::<hertz>(0.3);
 
     let mut current_simulation_time: Time = Time::new::<second>(0.0);
-    let max_simulation_time: Time = Time::new::<second>(60 as f64);
+    // simulation settings
+    let max_simulation_time: Time = Time::new::<second>(90 as f64);
     let timestep: Time = Time::new::<second>(0.2);
 
     let mut pi_controller: Controller = 
@@ -74,9 +75,6 @@ pub(crate) fn proportional_integral_test(){
     let a2: TimeSquared =one_second * one_second* 3.0;
     let b2: Time = Time::new::<second>(4.0);
     let c2: Ratio = Ratio::new::<ratio>(4.0);
-    let mut current_simulation_time: Time = Time::new::<second>(0.0);
-    let max_simulation_time: Time = Time::new::<second>(30 as f64);
-    let timestep: Time = Time::new::<second>(0.1);
 
     let mut tf = TransferFnSecondOrder::new(a1, b1, c1, a2, b2, c2).unwrap();
 
