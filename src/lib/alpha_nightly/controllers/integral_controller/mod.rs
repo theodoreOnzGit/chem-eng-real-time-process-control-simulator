@@ -68,7 +68,7 @@ impl TransferFnTraits for IntegralController {
             let new_ramp_response = RampResponse::new(
                 ramp_fn_gain_gradient, 
                 ramp_fn_start_time, 
-                user_input, 
+                ramp_fn_user_input, 
                 ramp_fn_current_time)?;
 
             self.delayed_ramp_fn_vectors.push(new_ramp_response);
@@ -192,7 +192,12 @@ impl IntegralController {
                 let ramp_fn_prevailing_gradient = 
                     ramp_fn_response.gradient_gain
                     * ramp_fn_response.user_input;
+
+                // update the main ramp function
                 self.main_ramp_fn.gradient_gain += ramp_fn_prevailing_gradient;
+                self.main_ramp_fn.user_input = ramp_fn_response.user_input;
+                self.main_ramp_fn.start_time = time_of_input;
+                self.main_ramp_fn.current_time = time_of_input;
 
                 // then i remove the first order response from the 
                 // index
@@ -253,7 +258,11 @@ impl IntegralController {
                     let ramp_fn_prevailing_gradient = 
                         ramp_fn_response.gradient_gain
                         * ramp_fn_response.user_input;
+                    // update the main ramp function
                     self.main_ramp_fn.gradient_gain += ramp_fn_prevailing_gradient;
+                    self.main_ramp_fn.user_input = ramp_fn_response.user_input;
+                    self.main_ramp_fn.start_time = time_of_input;
+                    self.main_ramp_fn.current_time = time_of_input;
 
                     // then i remove the first order response from the 
                     // index
