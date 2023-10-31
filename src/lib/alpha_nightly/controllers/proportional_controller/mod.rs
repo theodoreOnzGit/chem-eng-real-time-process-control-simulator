@@ -92,7 +92,7 @@ impl TransferFnTraits for ProportionalController {
     fn spawn_writer(&mut self, name: String) -> Result<csv::Writer<std::fs::File>,
     ChemEngProcessControlSimulatorError> {
 
-        self.transfer_fn.spawn_writer(name + "_filtered_derivative_controller_")
+        self.transfer_fn.spawn_writer(name + "_proportional_controller_")
     }
 
     fn csv_write_values(&mut self, 

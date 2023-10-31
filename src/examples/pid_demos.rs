@@ -36,9 +36,9 @@ pub(crate) fn integral_controller_ramp_test(){
     let max_simulation_time: Time = Time::new::<second>(60 as f64);
     let timestep: Time = Time::new::<second>(0.2);
 
-    let mut integral_controller_for_writing = 
+    let mut integral_controller: Controller = 
         IntegralController::new(controller_gain,
-            integral_time).unwrap();
+            integral_time).unwrap().into();
 
     //
     // if you need to set initial values
@@ -55,7 +55,7 @@ pub(crate) fn integral_controller_ramp_test(){
 
     // writer creation
 
-    let mut wtr = integral_controller_for_writing.spawn_writer("demo_ramp_fn".to_string()).unwrap();
+    let mut wtr = integral_controller.spawn_writer("demo_ramp_fn".to_string()).unwrap();
 
     let stuff_to_do_in_simulation_loop = move ||{
         // for this case, I have three step functions 
@@ -77,12 +77,12 @@ pub(crate) fn integral_controller_ramp_test(){
             user_input = Ratio::new::<ratio>(-1.0);
         }
 
-        let output = integral_controller_for_writing.set_user_input_and_calc(
+        let output = integral_controller.set_user_input_and_calc(
             user_input, current_simulation_time).unwrap();
 
         // write 
         let writer_borrow = &mut wtr;
-        integral_controller_for_writing.csv_write_values(
+        integral_controller.csv_write_values(
             writer_borrow, current_simulation_time, 
             user_input, output).unwrap();
 
