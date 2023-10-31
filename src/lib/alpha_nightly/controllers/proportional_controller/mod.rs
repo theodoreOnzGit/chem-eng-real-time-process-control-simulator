@@ -20,6 +20,28 @@ pub struct ProportionalController{
     pub transfer_fn: TransferFnFirstOrder,
 }
 
+impl ProportionalController {
+
+    /// a filtered derivative controller 
+    /// in the form:
+    /// G(s) = K_c 
+    pub fn new(controller_gain: Ratio) -> Self {
+
+        // G(s) = (a1 s + b1)/(a2 s + b2)
+        //
+        // a1 = K_c * 1 second (time)
+        // b1 = K_c * 1 (ratio)
+        // a2 = 1 second (time)
+        // b2 = 1 (ratio)
+        let a1 = Time::new::<second>(1.0) * controller_gain;
+        let b1 = controller_gain;
+        let a2 = Time::new::<second>(1.0);
+        let b2 = Ratio::new::<ratio>(1.0);
+        let transfer_fn = TransferFnFirstOrder::new(a1, b1, a2, b2).unwrap();
+
+        Self { transfer_fn }
+    }
+}
 impl Default for ProportionalController {
     /// gives: 
     /// G(s) = 1
