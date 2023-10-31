@@ -1,4 +1,5 @@
 use crate::alpha_nightly::transfer_fn_wrapper_and_enums::{TransferFnFirstOrder, TransferFnTraits};
+use csv::Writer;
 use uom::si::f64::*;
 use uom::ConstZero;
 use uom::si::frequency::hertz;
@@ -94,7 +95,10 @@ impl TransferFnTraits for IntegralController {
 
     fn spawn_writer(&mut self, name: String) -> Result<csv::Writer<std::fs::File>,
     ChemEngProcessControlSimulatorError> {
-        todo!()
+        let mut title_string: String = name;
+        title_string += "_integral_controller";
+        let wtr = Writer::from_path(title_string)?;
+        Ok(wtr)
     }
 
     fn csv_write_values(&mut self, 
@@ -103,7 +107,17 @@ impl TransferFnTraits for IntegralController {
         input: Ratio,
         output: Ratio) -> Result<(), 
     ChemEngProcessControlSimulatorError> {
-        todo!()
+        let current_time_string = time.get::<second>().to_string();
+        let input_string = input.get::<ratio>().to_string();
+        let output_string = output.get::<ratio>().to_string();
+
+        wtr.write_record(&[current_time_string,
+            input_string,
+            output_string])?;
+
+        wtr.flush().unwrap();
+
+        Ok(())
     }
 }
 
