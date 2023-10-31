@@ -11,6 +11,6 @@ pub(crate) mod filtered_derivative_controller;
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub enum Controller {
     PIDFiltered(ProportionalController,FilteredDerivativeController),
-    PI,
+    PI(ProportionalController),
     P(ProportionalController),
 }
