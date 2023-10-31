@@ -1,12 +1,13 @@
 use crate::alpha_nightly::transfer_fn_wrapper_and_enums::{TransferFnFirstOrder, TransferFnTraits};
 use uom::si::f64::*;
 use uom::ConstZero;
+use uom::si::ratio::ratio;
 use uom::si::time::second;
 use crate::alpha_nightly::errors::ChemEngProcessControlSimulatorError;
 
 /// a filtered derivative controller 
-///
-/// G(s) = s / (0.1 s + 1)
+/// in the form:
+/// G(s) = (tau_d s) / (alpha tau_d s + 1)
 ///
 /// The form is identical to that of a first order transfer function 
 /// with s = 0 as its only zero
@@ -17,6 +18,31 @@ use crate::alpha_nightly::errors::ChemEngProcessControlSimulatorError;
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub struct FilteredDerivativeController{
     pub transfer_fn: TransferFnFirstOrder,
+}
+
+impl FilteredDerivativeController {
+
+    /// a filtered derivative controller 
+    /// in the form:
+    /// G(s) = (tau_d s) / (alpha tau_d s + 1)
+    pub fn new(controller_gain: Ratio,
+        derivative_time: Time,
+        alpha: Ratio) -> Self {
+
+        // G(s) = (a1 s + b1)/(a2 s + b2)
+        //
+        // a1 = 1 second 
+        // b1 = 0 (ratio)
+        // a2 = 0.1 second 
+        // b2 = 0 (ratio)
+        let b1 = Ratio::ZERO;
+        let b2 = Ratio::new::<ratio>(1.0);
+        let a1 = derivative_time * controller_gain;
+        let a2 = derivative_time * alpha;
+        let transfer_fn = TransferFnFirstOrder::new(a1, b1, a2, b2).unwrap();
+
+        Self { transfer_fn }
+    }
 }
 
 impl Default for FilteredDerivativeController {
@@ -31,7 +57,7 @@ impl Default for FilteredDerivativeController {
         // a2 = 0.1 second 
         // b2 = 0 (ratio)
         let b1 = Ratio::ZERO;
-        let b2 = Ratio::ZERO;
+        let b2 = Ratio::new::<ratio>(1.0);
         let a1 = Time::new::<second>(1.0);
         let a2 = Time::new::<second>(0.1);
         let transfer_fn = TransferFnFirstOrder::new(a1, b1, a2, b2).unwrap();
