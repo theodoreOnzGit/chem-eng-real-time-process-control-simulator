@@ -282,6 +282,86 @@ impl IntegralController {
     }
 }
 
+/// Ramp response for integral controller 
+/// able to take in a time varying input
+///
+/// Transfer function is G(s) = 1/s
+#[derive(Debug,PartialEq, PartialOrd, Clone, Copy)]
+pub struct RampResponseRealTime {
+    pub(crate) start_time: Time,
+    pub(crate) current_time: Time,
+    /// previous timestep input
+    pub(crate) previous_timestep_input: Ratio,
+
+    /// offset for ramp function calculations
+    pub(crate) offset: Ratio,
+
+    /// gradient gain 
+    /// it is: Kc/tau_i 
+    pub(crate) gradient_gain: Frequency,
+    
+}
+
+impl Default for RampResponseRealTime {
+    /// returns G(s) = 1/s
+    fn default() -> Self {
+        Self { start_time: Time::ZERO, 
+            current_time: Time::ZERO, 
+            previous_timestep_input: Ratio::ZERO, 
+            offset: Ratio::ZERO,
+            gradient_gain: Frequency::new::<hertz>(1.0),
+        }
+    }
+}
+
+impl RampResponseRealTime {
+
+    pub fn new(integral_time: Time,
+    controller_gain: Ratio) -> Result<Self,ChemEngProcessControlSimulatorError> {
+        // we start with unit ramp
+        let mut ramp_response = Self::default();
+
+        ramp_response.gradient_gain = controller_gain/integral_time;
+
+        return Ok(ramp_response);
+    }
+
+    fn set_user_input_and_calc(&mut self, 
+        user_input: Ratio,
+        time_of_input: Time) -> Result<Ratio, 
+    ChemEngProcessControlSimulatorError> {
+
+        // check if input is equal to current input 
+
+        // case where input is not the same to 9 decimal places
+
+        let input_changed: bool = 
+        (user_input.get::<ratio>() * 1e9).round() 
+        - (self.previous_timestep_input.clone()
+            .get::<ratio>()*1e9).round() != 0.0 ;
+
+        // if input changed, then we must change the gradient and 
+        // the offset
+        if input_changed {
+            let k_c_over_tau_i: Frequency = self.gradient_gain;
+            let a_i = user_input;
+
+            let gradient_change: Frequency = a_i * k_c_over_tau_i;
+            let offset_change: Ratio = -a_i*time_of_input *k_c_over_tau_i;
+
+            self.offset += offset_change;
+            self.gradient_gain += gradient_change;
+        }
+
+        // now calc based on the linear input: 
+
+        let output = time_of_input * self.gradient_gain + self.offset;
+
+        return Ok(output);
+    }
+}
+
+
 /// Ramp response for integral controller, 
 /// This is because the integral of a step function is 
 /// a ramp response
