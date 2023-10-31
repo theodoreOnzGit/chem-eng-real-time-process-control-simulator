@@ -18,6 +18,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 
 use chem_eng_real_time_process_control_simulator::alpha_nightly::prelude::*;
+use chem_eng_real_time_process_control_simulator::alpha_nightly::prelude::integral_controller::RampResponseRealTime;
 use uom::ConstZero;
 use uom::si::f64::*;
 use uom::si::ratio::ratio;
@@ -38,9 +39,13 @@ pub(crate) fn integral_controller_ramp_test(){
     let max_simulation_time: Time = Time::new::<second>(60 as f64);
     let timestep: Time = Time::new::<second>(0.2);
 
-    let mut integral_controller = 
+    let mut integral_controller_for_writing = 
         IntegralController::new(controller_gain,
             integral_time).unwrap();
+
+    let mut integral_controller_ramp = RampResponseRealTime::new(
+        integral_time,
+        controller_gain).unwrap();
     //
     // if you need to set initial values
     // because the transfer function only measures deviations from 
@@ -56,7 +61,7 @@ pub(crate) fn integral_controller_ramp_test(){
 
     // writer creation
 
-    let mut wtr = integral_controller.spawn_writer("demo_ramp_fn".to_string()).unwrap();
+    let mut wtr = integral_controller_for_writing.spawn_writer("demo_ramp_fn".to_string()).unwrap();
 
     let stuff_to_do_in_simulation_loop = move ||{
         // for this case, I have three step functions 
@@ -78,11 +83,11 @@ pub(crate) fn integral_controller_ramp_test(){
             user_input = Ratio::new::<ratio>(-1.0);
         }
 
-        let output = integral_controller.set_user_input_and_calc(
+        let output = integral_controller_ramp.set_user_input_and_calc(
             user_input, current_simulation_time).unwrap();
 
         let writer_borrow = &mut wtr;
-        integral_controller.csv_write_values(
+        integral_controller_for_writing.csv_write_values(
             writer_borrow, current_simulation_time, 
             user_input, output).unwrap();
 

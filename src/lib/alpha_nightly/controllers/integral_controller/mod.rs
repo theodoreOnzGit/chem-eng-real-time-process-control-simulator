@@ -122,9 +122,14 @@ pub struct RampResponseRealTime {
     /// offset for ramp function calculations
     pub(crate) offset: Ratio,
 
-    /// gradient gain 
-    /// it is: Kc/tau_i 
+    /// gradient gain, which one will add and change the offsets
     pub(crate) gradient_gain: Frequency,
+
+    /// integral_time or reset time 
+    pub(crate) integral_time: Time,
+    
+    /// controller_gain 
+    pub(crate) controller_gain: Ratio,
     
 }
 
@@ -135,7 +140,9 @@ impl Default for RampResponseRealTime {
             current_time: Time::ZERO, 
             previous_timestep_input: Ratio::ZERO, 
             offset: Ratio::ZERO,
-            gradient_gain: Frequency::new::<hertz>(1.0),
+            gradient_gain: Frequency::ZERO,
+            integral_time: Time::new::<second>(1.0),
+            controller_gain: Ratio::new::<ratio>(1.0),
         }
     }
 }
@@ -146,13 +153,13 @@ impl RampResponseRealTime {
     controller_gain: Ratio) -> Result<Self,ChemEngProcessControlSimulatorError> {
         // we start with unit ramp
         let mut ramp_response = Self::default();
-
-        ramp_response.gradient_gain = controller_gain/integral_time;
+        ramp_response.integral_time = integral_time;
+        ramp_response.controller_gain = controller_gain;
 
         return Ok(ramp_response);
     }
 
-    fn set_user_input_and_calc(&mut self, 
+    pub fn set_user_input_and_calc(&mut self, 
         user_input: Ratio,
         time_of_input: Time) -> Result<Ratio, 
     ChemEngProcessControlSimulatorError> {
@@ -166,22 +173,29 @@ impl RampResponseRealTime {
         - (self.previous_timestep_input.clone()
             .get::<ratio>()*1e9).round() != 0.0 ;
 
+        // time update 
+        self.current_time = time_of_input;
+
         // if input changed, then we must change the gradient and 
         // the offset
         if input_changed {
-            let k_c_over_tau_i: Frequency = self.gradient_gain;
+            let k_c = self.controller_gain;
+            let tau_i = self.integral_time;
             let a_i = user_input;
 
-            let gradient_change: Frequency = a_i * k_c_over_tau_i;
-            let offset_change: Ratio = -a_i*time_of_input *k_c_over_tau_i;
+            let gradient_change: Frequency = a_i * k_c/tau_i;
+            let offset_change: Ratio = -a_i*time_of_input *k_c/tau_i;
 
             self.offset += offset_change;
             self.gradient_gain += gradient_change;
+
+            // finally change the input at last timestep
+            self.previous_timestep_input = user_input;
         }
 
         // now calc based on the linear input: 
 
-        let output = time_of_input * self.gradient_gain + self.offset;
+        let output = self.current_time * self.gradient_gain + self.offset;
 
         return Ok(output);
     }
