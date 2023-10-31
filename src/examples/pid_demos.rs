@@ -18,7 +18,6 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 
 use chem_eng_real_time_process_control_simulator::alpha_nightly::prelude::*;
-use chem_eng_real_time_process_control_simulator::alpha_nightly::prelude::integral_controller::RampResponseRealTime;
 use uom::ConstZero;
 use uom::si::f64::*;
 use uom::si::ratio::ratio;
