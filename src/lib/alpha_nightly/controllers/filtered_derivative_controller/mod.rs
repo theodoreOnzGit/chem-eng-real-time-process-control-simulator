@@ -24,17 +24,17 @@ impl FilteredDerivativeController {
 
     /// a filtered derivative controller 
     /// in the form:
-    /// G(s) = (tau_d s) / (alpha tau_d s + 1)
+    /// G(s) = K_c * (tau_d s) / (alpha tau_d s + 1)
     pub fn new(controller_gain: Ratio,
         derivative_time: Time,
         alpha: Ratio) -> Self {
 
         // G(s) = (a1 s + b1)/(a2 s + b2)
         //
-        // a1 = 1 second 
+        // a1 = K_c *tau_d
         // b1 = 0 (ratio)
-        // a2 = 0.1 second 
-        // b2 = 0 (ratio)
+        // a2 = alpha * tau_d
+        // b2 = 1 (ratio)
         let b1 = Ratio::ZERO;
         let b2 = Ratio::new::<ratio>(1.0);
         let a1 = derivative_time * controller_gain;
