@@ -5,6 +5,8 @@ use uom::si::ratio::ratio;
 use uom::si::time::second;
 use crate::alpha_nightly::errors::ChemEngProcessControlSimulatorError;
 
+use super::AnalogController;
+
 /// a filtered derivative controller 
 /// in the form:
 /// G(s) = (tau_d s) / (alpha tau_d s + 1)
@@ -95,3 +97,8 @@ impl TransferFnTraits for FilteredDerivativeController {
     }
 }
 
+impl Into<AnalogController> for FilteredDerivativeController {
+    fn into(self) -> AnalogController {
+        AnalogController::DerivativeFilteredStandalone(self)
+    }
+}
