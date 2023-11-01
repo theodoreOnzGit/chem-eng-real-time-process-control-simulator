@@ -83,7 +83,7 @@ pub(crate) fn proportional_derivative_kick_eliminator_feedback_loop_example(){
 
     let mut pd_controller: AnalogController = 
     AnalogController::new_filtered_pd_controller(
-        controller_gain,
+        Ratio::new::<ratio>(1.0),
         derivative_time,
         alpha).unwrap().into();
 
