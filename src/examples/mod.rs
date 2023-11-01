@@ -17,4 +17,4 @@
 pub(crate) mod second_order_demos;
 pub(crate) mod first_order_demos;
 pub(crate) mod generic_transfer_fn_demos;
-pub(crate) mod pid_demos;
+pub(crate) mod analog_pid_demos;
