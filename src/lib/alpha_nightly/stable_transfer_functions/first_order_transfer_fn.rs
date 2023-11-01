@@ -6,8 +6,8 @@ use crate::alpha_nightly::errors::ChemEngProcessControlSimulatorError;
 pub struct FirstOrderStableTransferFnNoZeroes {
     pub(crate) process_gain: Ratio,
     pub(crate) process_time: Time,
-    pub(crate) previous_timestep_input: Ratio,
     /// previous timestep output
+    pub(crate) previous_timestep_input: Ratio,
     pub(crate) offset: Ratio,
     /// delay
     pub(crate) delay: Time,

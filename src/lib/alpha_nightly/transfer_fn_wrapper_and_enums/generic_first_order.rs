@@ -62,7 +62,9 @@ pub enum TransferFnFirstOrder {
 
 impl Default for TransferFnFirstOrder {
     fn default() -> Self {
-        todo!()
+        let zeroes_transferfn = FirstOrderStableTransferFnForZeroes::default();
+        let first_order_transfer_fn = FirstOrderStableTransferFnNoZeroes::default();
+        TransferFnFirstOrder::Stable(first_order_transfer_fn,zeroes_transferfn)
     }
 }
 

@@ -1,5 +1,6 @@
 # chem-eng-real-time-process-control-simulator
-A real-time process control simulator library
+A real-time process control simulator library for chemical engineering 
+and other engineering.
 
 ## to run 
 

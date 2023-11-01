@@ -16,7 +16,7 @@
 /// limitations under the License.
 pub mod prelude;
 pub(crate) mod stable_transfer_functions;
-pub(crate) mod controllers;
+pub mod controllers;
 pub mod errors;
 pub mod transfer_fn_wrapper_and_enums;
 

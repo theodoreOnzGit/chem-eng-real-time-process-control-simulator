@@ -9,7 +9,7 @@ pub enum TransferFn {
 
 impl Default for TransferFn {
     fn default() -> TransferFn {
-        todo!();
+        TransferFnFirstOrder::default().into()
     }
 }
 
