@@ -61,7 +61,7 @@ pub(crate) fn proportional_derivative_kick_eliminator_feedback_loop_example(){
 
     // controller settings
     let controller_gain = Ratio::new::<ratio>(0.5);
-    let integral_time: Time = controller_gain / Frequency::new::<hertz>(0.3);
+    let integral_time: Time = controller_gain / Frequency::new::<hertz>(1.2);
     let derivative_time: Time = Time::new::<second>(1.0);
     // derivative time ratio
     let alpha: Ratio = Ratio::new::<ratio>(1.0);
