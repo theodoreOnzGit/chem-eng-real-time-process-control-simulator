@@ -31,5 +31,7 @@ fn main() {
     examples::analog_pid_demos::proportional_integral_derivative_test();
     examples::analog_pid_demos::fine_timesteps_proportional_integral_derivative_test();
     examples::analog_pid_demos::derivative_controller_step_test();
+    examples::analog_pid_demos::proportional_standalone_feedback_test();
+    examples::analog_pid_demos::proportional_controller_step_test();
 }
 

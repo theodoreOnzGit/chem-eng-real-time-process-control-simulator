@@ -454,7 +454,7 @@ pub(crate) fn proportional_integral_test(){
 /// K_c = 0.5 
 ///
 /// approximately validated... can use some improvement still
-pub(crate) fn proportional_standalone_test(){
+pub(crate) fn proportional_standalone_feedback_test(){
 
 
     let controller_gain = Ratio::new::<ratio>(0.5);
@@ -720,6 +720,84 @@ pub(crate) fn derivative_controller_step_test(){
 
 }
 
+/// 
+/// This is a simulation of three step changes for 
+/// proportional controller 
+///
+/// the transfer function is mean to be 0.5, 
+/// so input and output must be half
+pub(crate) fn proportional_controller_step_test(){
+
+    // controller settings
+    let controller_gain = Ratio::new::<ratio>(0.5);
+
+    // simulation settings
+    let mut current_simulation_time: Time = Time::new::<second>(0.0);
+    let max_simulation_time: Time = Time::new::<second>(60 as f64);
+    let timestep: Time = Time::new::<second>(0.2);
+
+    let mut proportional_controller: AnalogController = 
+        ProportionalController::new(controller_gain,
+            ).unwrap().into();
+
+    //
+    // if you need to set initial values
+    // because the transfer function only measures deviations from 
+    // these inputs and outputs
+    //
+    // // do this before starting up
+    //
+    // // actually transfer functions work with deviation variables,
+    // // the initial input and output is always zero
+    // tf.set_dead_time(initial_value);
+
+    let mut user_input = Ratio::ZERO;
+
+    // writer creation
+
+    let mut wtr = proportional_controller.spawn_writer(
+        "openloop_proportional_controller_standalone".to_string()).unwrap();
+
+    let stuff_to_do_in_simulation_loop = move ||{
+        // for this case, I have three step functions 
+        // the step functions are:
+        //
+        // at 5s to 10s, input is 1 
+        // at at 10s to 15s, input is 2.5
+        // at 15s onwards, input is -1
+
+        if current_simulation_time <= Time::ZERO {
+            // do nothing, leave it at zero
+        } else if current_simulation_time <= Time::new::<second>(5.0) {
+            user_input = Ratio::ZERO;
+        } else if current_simulation_time <= Time::new::<second>(10.0) {
+            user_input = Ratio::new::<ratio>(1.0);
+        } else if current_simulation_time <= Time::new::<second>(15.0) {
+            user_input = Ratio::new::<ratio>(2.5);
+        } else {
+            user_input = Ratio::new::<ratio>(-1.0);
+        }
+
+        let output = proportional_controller.set_user_input_and_calc(
+            user_input, current_simulation_time).unwrap();
+
+        // write 
+        let writer_borrow = &mut wtr;
+        proportional_controller.csv_write_values(
+            writer_borrow, current_simulation_time, 
+            user_input, output).unwrap();
+
+        current_simulation_time += timestep;
+    };
+
+    // need to create a pointer for the stuff_to_do_in_simulation_loop
+    // this is to enable parallelism
+    let user_task_ptr = Arc::new(Mutex::new(stuff_to_do_in_simulation_loop));
+    simulation_template(max_simulation_time, timestep, current_simulation_time,
+        user_task_ptr);
+
+
+}
 
 fn simulation_template(
     max_simulation_time: Time,
