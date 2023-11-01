@@ -33,5 +33,6 @@ fn main() {
     examples::analog_pid_demos::derivative_controller_step_test();
     examples::analog_pid_demos::proportional_standalone_feedback_test();
     examples::analog_pid_demos::proportional_controller_step_test();
+    examples::feedback_control_examples::proportional_derivative_kick_eliminator_feedback_loop_example();
 }
 

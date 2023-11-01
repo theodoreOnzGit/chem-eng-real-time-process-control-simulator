@@ -42,3 +42,13 @@ limitations under the License.
 I use crates such as approx, csv, thiserror and uom. The licenses 
 are located in the licenses_of_dependencies folder.
 
+
+## References 
+
+I used some of these references to develop this library:
+
+Seborg, Dale E., Thomas F. Edgar, Duncan A. Mellichamp, and 
+Francis J. Doyle III. Process dynamics and control. John Wiley & Sons, 2016.
+
+Green, D. W., & Perry, R. H. (2008). Perry's chemical engineers' 
+handbook. McGraw-Hill Education.
