@@ -19,6 +19,7 @@ pub enum AnalogController {
     PIDFiltered(ProportionalController,IntegralController,FilteredDerivativeController),
     PI(ProportionalController,IntegralController),
     P(ProportionalController),
+    PDFiltered(ProportionalController, FilteredDerivativeController),
     IntegralStandalone(IntegralController),
     DerivativeFilteredStandalone(FilteredDerivativeController),
 }
@@ -72,6 +73,13 @@ impl TransferFnTraits for AnalogController {
             AnalogController::DerivativeFilteredStandalone(ctrl) => {
                 ctrl.set_dead_time(dead_time)
             },
+            AnalogController::PDFiltered(proportional_controller, 
+                filtered_derivative_controller) => {
+                proportional_controller.set_dead_time(dead_time);
+                filtered_derivative_controller.set_dead_time(dead_time)
+
+            },
+
         }
     }
 
@@ -107,6 +115,16 @@ impl TransferFnTraits for AnalogController {
             AnalogController::DerivativeFilteredStandalone(ctrl) => {
                 ctrl.set_user_input_and_calc(user_input, time_of_input)
             },
+            AnalogController::PDFiltered(proportional_controller, 
+                filtered_derivative_controller) => {
+                    let p_output = 
+                    proportional_controller.set_user_input_and_calc(user_input, time_of_input)?;
+                    let d_output = 
+                    filtered_derivative_controller.set_user_input_and_calc(user_input, time_of_input)?;
+
+                    return Ok(p_output + d_output);
+                },
+
         }
     }
 
@@ -129,6 +147,10 @@ impl TransferFnTraits for AnalogController {
             },
             AnalogController::DerivativeFilteredStandalone(ctrl) => {
                 return ctrl.spawn_writer(title_string);
+            },
+            AnalogController::PDFiltered(_proportional_controller, 
+                _filtered_derivative_controller) => {
+                title_string += "_PD_controller.csv"
             },
         }
         let wtr = Writer::from_path(title_string)?;
