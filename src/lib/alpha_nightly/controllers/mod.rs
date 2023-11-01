@@ -49,6 +49,17 @@ impl AnalogController {
 
         Ok(Self::PIDFiltered(p_controller, i_controller, d_controller))
     }
+    pub fn new_filtered_pd_controller(controller_gain: Ratio,
+        derivative_time: Time,
+        alpha: Ratio,
+    ) -> Result<Self,ChemEngProcessControlSimulatorError> {
+
+        let p_controller = ProportionalController::new(controller_gain)?;
+        let d_controller = FilteredDerivativeController::new(
+            controller_gain, derivative_time, alpha)?;
+
+        Ok(Self::PDFiltered(p_controller, d_controller))
+    }
 }
 
 impl TransferFnTraits for AnalogController {
