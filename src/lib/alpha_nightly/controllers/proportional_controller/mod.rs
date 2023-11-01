@@ -4,7 +4,7 @@ use uom::si::ratio::ratio;
 use uom::si::time::second;
 use crate::alpha_nightly::errors::ChemEngProcessControlSimulatorError;
 
-use super::Controller;
+use super::AnalogController;
 
 /// a filtered derivative controller 
 ///
@@ -106,8 +106,8 @@ impl TransferFnTraits for ProportionalController {
 }
 
 
-impl Into<Controller> for ProportionalController {
-    fn into(self) -> Controller {
-        Controller::P(self)
+impl Into<AnalogController> for ProportionalController {
+    fn into(self) -> AnalogController {
+        AnalogController::P(self)
     }
 }

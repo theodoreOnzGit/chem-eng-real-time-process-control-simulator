@@ -15,14 +15,15 @@ pub(crate) mod filtered_derivative_controller;
 
 /// generic enum for a Continuous Time Controller
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
-pub enum Controller {
+pub enum AnalogController {
     PIDFiltered(ProportionalController,IntegralController,FilteredDerivativeController),
     PI(ProportionalController,IntegralController),
     P(ProportionalController),
     IntegralStandalone(IntegralController),
+    DerivativeFilteredStandalone(FilteredDerivativeController),
 }
 
-impl Controller {
+impl AnalogController {
     pub fn new_pi_controller(controller_gain: Ratio,
         integral_time: Time) -> Result<Self,ChemEngProcessControlSimulatorError> {
 
@@ -49,23 +50,26 @@ impl Controller {
     }
 }
 
-impl TransferFnTraits for Controller {
+impl TransferFnTraits for AnalogController {
     fn set_dead_time(&mut self, dead_time: uom::si::f64::Time) {
         match self {
-            Controller::PIDFiltered(proportional_controller,
+            AnalogController::PIDFiltered(proportional_controller,
                 integral_controller, filtered_derivative_controller) => {
                     proportional_controller.set_dead_time(dead_time);
                     integral_controller.set_dead_time(dead_time);
                     filtered_derivative_controller.set_dead_time(dead_time)
                 },
-            Controller::PI(p_controller, integral_controller) => {
+            AnalogController::PI(p_controller, integral_controller) => {
                 p_controller.set_dead_time(dead_time);
                 integral_controller.set_dead_time(dead_time)
             },
-            Controller::P(ctrl) => {
+            AnalogController::P(ctrl) => {
                 ctrl.set_dead_time(dead_time)
             },
-            Controller::IntegralStandalone(ctrl) => {
+            AnalogController::IntegralStandalone(ctrl) => {
+                ctrl.set_dead_time(dead_time)
+            },
+            AnalogController::DerivativeFilteredStandalone(ctrl) => {
                 ctrl.set_dead_time(dead_time)
             },
         }
@@ -76,7 +80,7 @@ impl TransferFnTraits for Controller {
         time_of_input: uom::si::f64::Time) -> Result<uom::si::f64::Ratio, 
     super::errors::ChemEngProcessControlSimulatorError> {
         match self {
-            Controller::PIDFiltered(proportional_controller,
+            AnalogController::PIDFiltered(proportional_controller,
                 integral_controller, filtered_derivative_controller) => {
                     let p_output = 
                     proportional_controller.set_user_input_and_calc(user_input, time_of_input)?;
@@ -87,17 +91,20 @@ impl TransferFnTraits for Controller {
 
                     return Ok(p_output + i_output + d_output);
                 },
-            Controller::PI(proportional_controller, integral_controller) => {
+            AnalogController::PI(proportional_controller, integral_controller) => {
                 let p_output = 
                 proportional_controller.set_user_input_and_calc(user_input, time_of_input)?;
                 let i_output = 
                 integral_controller.set_user_input_and_calc(user_input, time_of_input)?;
                 return Ok(p_output + i_output);
             },
-            Controller::P(ctrl) => {
+            AnalogController::P(ctrl) => {
                 ctrl.set_user_input_and_calc(user_input, time_of_input)
             },
-            Controller::IntegralStandalone(ctrl) => {
+            AnalogController::IntegralStandalone(ctrl) => {
+                ctrl.set_user_input_and_calc(user_input, time_of_input)
+            },
+            AnalogController::DerivativeFilteredStandalone(ctrl) => {
                 ctrl.set_user_input_and_calc(user_input, time_of_input)
             },
         }
@@ -107,17 +114,20 @@ impl TransferFnTraits for Controller {
     super::errors::ChemEngProcessControlSimulatorError> {
         let mut title_string: String = name;
         match self {
-            Controller::PIDFiltered(_, _, _) => {
+            AnalogController::PIDFiltered(_, _, _) => {
                     title_string += "_PID_controller.csv"
 
                 },
-            Controller::PI(_, _) => {
+            AnalogController::PI(_, _) => {
                 title_string += "_PI_controller.csv"
             },
-            Controller::P(ctrl) => {
+            AnalogController::P(ctrl) => {
                 return ctrl.spawn_writer(title_string);
             },
-            Controller::IntegralStandalone(ctrl) => {
+            AnalogController::IntegralStandalone(ctrl) => {
+                return ctrl.spawn_writer(title_string);
+            },
+            AnalogController::DerivativeFilteredStandalone(ctrl) => {
                 return ctrl.spawn_writer(title_string);
             },
         }

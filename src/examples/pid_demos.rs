@@ -71,8 +71,8 @@ pub(crate) fn fine_timesteps_proportional_integral_derivative_test(){
 
     
 
-    let mut pid_controller: Controller = 
-    Controller::new_filtered_pid_controller(controller_gain,
+    let mut pid_controller: AnalogController = 
+    AnalogController::new_filtered_pid_controller(controller_gain,
         integral_time,
         derivative_time,
         alpha).unwrap();
@@ -81,7 +81,7 @@ pub(crate) fn fine_timesteps_proportional_integral_derivative_test(){
     // or 0.1 ms
     let measurement_delay = Time::new::<millisecond>(0.1);
 
-    let mut measurement_delay_block: Controller = 
+    let mut measurement_delay_block: AnalogController = 
     ProportionalController::new(Ratio::new::<ratio>(1.0)).unwrap().into();
 
     measurement_delay_block.set_dead_time(measurement_delay);
@@ -218,8 +218,8 @@ pub(crate) fn proportional_integral_derivative_test(){
 
     
 
-    let mut pid_controller: Controller = 
-    Controller::new_filtered_pid_controller(controller_gain,
+    let mut pid_controller: AnalogController = 
+    AnalogController::new_filtered_pid_controller(controller_gain,
         integral_time,
         derivative_time,
         alpha).unwrap();
@@ -228,7 +228,7 @@ pub(crate) fn proportional_integral_derivative_test(){
     // or 0.1 ms
     let measurement_delay = Time::new::<millisecond>(0.1);
 
-    let mut measurement_delay_block: Controller = 
+    let mut measurement_delay_block: AnalogController = 
     ProportionalController::new(Ratio::new::<ratio>(1.0)).unwrap().into();
 
     measurement_delay_block.set_dead_time(measurement_delay);
@@ -342,15 +342,15 @@ pub(crate) fn proportional_integral_test(){
     let max_simulation_time: Time = Time::new::<second>(90 as f64);
     let timestep: Time = Time::new::<second>(0.2);
 
-    let mut pi_controller: Controller = 
-        Controller::new_pi_controller(controller_gain,
+    let mut pi_controller: AnalogController = 
+        AnalogController::new_pi_controller(controller_gain,
             integral_time).unwrap();
 
     // we also have a measurement delay of 0.0001 s 
     // or 0.1 ms
     let measurement_delay = Time::new::<millisecond>(0.1);
 
-    let mut measurement_delay_block: Controller = 
+    let mut measurement_delay_block: AnalogController = 
     ProportionalController::new(Ratio::new::<ratio>(1.0)).unwrap().into();
 
     measurement_delay_block.set_dead_time(measurement_delay);
@@ -452,7 +452,7 @@ pub(crate) fn integral_controller_ramp_test(){
     let max_simulation_time: Time = Time::new::<second>(60 as f64);
     let timestep: Time = Time::new::<second>(0.2);
 
-    let mut integral_controller: Controller = 
+    let mut integral_controller: AnalogController = 
         IntegralController::new(controller_gain,
             integral_time).unwrap().into();
 
