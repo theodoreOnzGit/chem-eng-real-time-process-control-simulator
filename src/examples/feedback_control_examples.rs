@@ -73,20 +73,21 @@ pub(crate) fn proportional_derivative_kick_eliminator_feedback_loop_example(){
 
     
 
-    let mut pid_controller: AnalogController = 
-    AnalogController::new_filtered_pid_controller(controller_gain,
-        integral_time,
-        derivative_time,
-        alpha).unwrap();
+    let mut pi_controller: AnalogController = 
+    AnalogController::new_pi_controller(controller_gain,
+        integral_time).unwrap();
 
     // we also have a measurement delay of 0.0001 s 
     // or 0.1 ms
     let measurement_delay = Time::new::<millisecond>(0.1);
 
-    let mut measurement_delay_block: AnalogController = 
-    ProportionalController::new(Ratio::new::<ratio>(1.0)).unwrap().into();
+    let mut pd_controller: AnalogController = 
+    AnalogController::new_filtered_pd_controller(
+        controller_gain,
+        derivative_time,
+        alpha).unwrap().into();
 
-    measurement_delay_block.set_dead_time(measurement_delay);
+    pd_controller.set_dead_time(measurement_delay);
     // now for the transfer function 
 
     use uom::si::{Quantity, ISQ, SI};
@@ -123,7 +124,7 @@ pub(crate) fn proportional_derivative_kick_eliminator_feedback_loop_example(){
 
     // writer creation
 
-    let mut wtr = pid_controller.spawn_writer("fine_timestep_pid_controller_test".to_string()).unwrap();
+    let mut wtr = pi_controller.spawn_writer("pd_feedback_pi_controller_test".to_string()).unwrap();
 
     let stuff_to_do_in_simulation_loop = move ||{
         // for this case, I have three step functions 
@@ -143,7 +144,7 @@ pub(crate) fn proportional_derivative_kick_eliminator_feedback_loop_example(){
 
         // true output
 
-        let transfer_fn_input = pid_controller.set_user_input_and_calc(
+        let transfer_fn_input = pi_controller.set_user_input_and_calc(
             set_point_error, current_simulation_time).unwrap();
 
         let tf_output = tf.set_user_input_and_calc(transfer_fn_input, 
@@ -151,13 +152,13 @@ pub(crate) fn proportional_derivative_kick_eliminator_feedback_loop_example(){
 
         // measured output set for next timestep
 
-        measured_output = measurement_delay_block.set_user_input_and_calc(
+        measured_output = pd_controller.set_user_input_and_calc(
             tf_output, current_simulation_time).unwrap();
 
 
         // write 
         let writer_borrow = &mut wtr;
-        pid_controller.csv_write_values(
+        pi_controller.csv_write_values(
             writer_borrow, current_simulation_time, 
             user_set_point, tf_output).unwrap();
 
