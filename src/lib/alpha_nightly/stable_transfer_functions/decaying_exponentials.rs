@@ -9,12 +9,14 @@ use crate::alpha_nightly::errors::ChemEngProcessControlSimulatorError;
 ///
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
 pub struct DecayingExponential {
-    pub(crate) magnitude: Ratio,
-    /// decay frequency or 1/decay time
-    pub(crate) a: Frequency,
+    pub(crate) magnitude_alpha: Ratio,
+    pub(crate) magnitude_beta: Ratio,
+    /// decay frequency of first root, 
+    pub(crate) alpha: Frequency,
+    /// decay frequency of second root (equal 
+    pub(crate) beta: Frequency,
+    /// to first root if there is only one root, or both equal)
     pub(crate) previous_timestep_input: Ratio,
-    /// oscillation frequency
-    pub(crate) omega: Frequency,
     /// previous timestep output
     pub(crate) offset: Ratio,
     /// delay
@@ -23,7 +25,7 @@ pub struct DecayingExponential {
     pub(crate) response_vec: Vec<DecayExponentialResponse>,
     /// choose whether it's a critically damped or 
     /// overdamped system
-    pub(crate) sinusoid_type: DecayingExponentialType,
+    pub(crate) exponent_type: DecayingExponentialType,
 }
 
 #[derive(Debug,PartialEq, PartialOrd, Clone, Copy)]
@@ -35,6 +37,197 @@ pub enum DecayingExponentialType {
     // one root only
     Single,
 
+}
+
+impl DecayingExponential {
+
+    /// sets the user input to some value
+    pub fn set_user_input_and_calc_output(&mut self, 
+        current_time: Time,
+        current_input: Ratio) 
+    -> Result<Ratio,ChemEngProcessControlSimulatorError> {
+        // check if input is equal to current input 
+
+        // case where input is not the same to 9 decimal places
+
+        let input_changed: bool = 
+        (current_input.get::<ratio>() * 1e9).round() 
+        - (self.previous_timestep_input.clone().get::<ratio>()*1e9).round() 
+        != 0.0 ;
+
+        if input_changed {
+            // need to add a response to the vector
+
+            let magnitude_alpha = self.magnitude_alpha;
+            let magnitude_beta = self.magnitude_beta;
+            let user_input = current_input - self.previous_timestep_input;
+            // the time where the first order response kicks in
+            let start_time = current_time + self.delay;
+            let exponent_type = self.exponent_type;
+            let alpha = self.alpha;
+            let beta = self.beta;
+
+            // make a new response
+            let new_response;
+
+            match exponent_type {
+                DecayingExponentialType::Overdamped => {
+                    new_response = 
+                        DecayExponentialResponse::new_overdamped(
+                            magnitude_alpha, 
+                            magnitude_beta, 
+                            alpha, 
+                            beta, 
+                            start_time, 
+                            user_input, 
+                            current_time)?
+                },
+                DecayingExponentialType::CriticallyDamped => {
+                    new_response = 
+                        DecayExponentialResponse::new_critical(
+                            Frequency::new::<hertz>(
+                                magnitude_alpha.get::<ratio>()
+                            ), 
+                            magnitude_beta, 
+                            alpha, 
+                            beta, 
+                            start_time, 
+                            user_input, 
+                            current_time)?
+                },
+                DecayingExponentialType::Single => {
+                    new_response = 
+                        DecayExponentialResponse::new_single_root(
+                            magnitude_alpha,
+                            alpha, 
+                            start_time, 
+                            user_input, 
+                            current_time)?
+                },
+            }
+
+
+            // add response to the vector
+            self.response_vec.push(new_response);
+
+            // then we need to change the previous_timestep_input 
+            // to the current input value 
+            self.previous_timestep_input = current_input;
+
+            // then we are done!
+
+        }
+
+        // clean up the vector first
+        self.clear_exponent_response_vector();
+
+        // need to calculate using the list of 
+        // first order response vectors as per normal
+        //
+        // So we are summing this up
+        // O(t) = summing:: u2(t - t2) * b [1-exp(-a * [t-t2])] 
+        // + offset
+        // first we add the offset
+
+        let summation_of_responses: Ratio = self.response_vec.
+            iter_mut().map(
+                |second_order_response|{
+                    second_order_response.calculate_response(current_time)}
+            ).sum();
+        //dbg!(summation_of_responses);
+        //dbg!(&self.response_vec);
+
+        let output = self.offset + summation_of_responses;
+
+        return Ok(output);
+
+    }
+
+    /// clears the item if they have reached steady state
+    fn clear_exponent_response_vector(&mut self){
+
+        let index_of_steady_state_result = self.response_vec.iter().position(
+            |second_order_response| {
+                second_order_response.is_steady_state()
+            }
+        );
+
+        match index_of_steady_state_result {
+
+            // if I found something at the index, remove it, 
+            // repeatedly test it until nothing is left
+            Some(index) => {
+                // first get the steady state value and add it to the 
+                // offset
+                let second_order_response = self.response_vec[index].clone();
+                let steady_state_value_of_response = 
+                second_order_response.steady_state_value();
+                self.offset += steady_state_value_of_response;
+
+                // then i remove the first order response from the 
+                // index
+                self.response_vec.remove(index);
+            },
+
+            // if no vectors reach steady state, exit
+            // with no issue
+            None => return,
+        }
+
+        // now, we have cleared the vector once, if there are other 
+        // times we need to clear the vector, then we enter a loop
+
+        let index_of_steady_state_result = self.response_vec.iter().position(
+            |second_order_response| {
+                second_order_response.is_steady_state()
+            }
+        );
+        // check if steady state responses are present
+        let mut steady_state_responses_present = 
+        match index_of_steady_state_result {
+            Some(_) => true,
+            None => false,
+        };
+
+        if !steady_state_responses_present {
+            return;
+        } 
+
+        // repeatedly clear the vector until no steady state responses 
+        // are left
+        while steady_state_responses_present {
+
+            // check for index
+            let index_of_steady_state_result = self.response_vec.iter().position(
+                |second_order_response| {
+                    second_order_response.is_steady_state()
+                }
+            );
+
+            steady_state_responses_present = match index_of_steady_state_result {
+                Some(index) => {
+                    // first get the steady state value and add it to the 
+                    // offset
+                    let second_order_response = self.response_vec[index].clone();
+                    let steady_state_value_of_response = 
+                    second_order_response.steady_state_value();
+                    self.offset += steady_state_value_of_response;
+
+                    // then i remove the first order response from the 
+                    // index
+                    self.response_vec.remove(index);
+
+                    // return true value to while loop
+                    true
+                },
+                // return false value to while loop
+                None => false,
+            };
+
+        }
+        return;
+
+    }
 }
 
 /// second order response struct, 
