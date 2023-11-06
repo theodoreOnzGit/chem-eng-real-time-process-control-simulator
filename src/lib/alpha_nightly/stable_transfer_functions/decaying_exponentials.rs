@@ -41,6 +41,119 @@ pub enum DecayingExponentialType {
 
 impl DecayingExponential {
 
+    /// constructor 
+    pub fn new_single_root(
+        magnitude: Ratio,
+        decay_constant: Frequency,
+        initial_input: Ratio,
+        initial_value: Ratio,
+        delay: Time,
+    ) -> Result<Self,ChemEngProcessControlSimulatorError> {
+
+        // if damping factor is less than or equal 
+        // 0, should throw an error 
+        // or panic (i will use errors maybe later?)
+
+        let alpha = decay_constant;
+        let beta = decay_constant;
+        let exponent_type = DecayingExponentialType::Single;
+
+        if alpha.value <= 0.0 {
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
+        }
+        Ok(DecayingExponential { 
+            magnitude_alpha: magnitude,
+            magnitude_beta: magnitude, 
+            alpha, 
+            beta, 
+            previous_timestep_input: initial_input, 
+            offset: initial_value, 
+            delay, 
+            response_vec: vec![], 
+            exponent_type,
+        })
+    }
+
+    /// constructor for new over damped system
+    /// with two real roots
+    pub fn new_overdamped(
+        magnitude_alpha: Ratio,
+        magnitude_beta: Ratio,
+        alpha: Frequency,
+        beta: Frequency,
+        initial_input: Ratio,
+        initial_value: Ratio,
+        delay: Time) -> Result<Self,ChemEngProcessControlSimulatorError> {
+
+        // if damping factor is less than or equal 
+        // 0, should throw an error 
+        // or panic (i will use errors maybe later?)
+
+        let exponent_type = DecayingExponentialType::Overdamped;
+
+        if alpha.value <= 0.0 {
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
+        }
+        Ok(DecayingExponential { 
+            magnitude_alpha,
+            magnitude_beta, 
+            alpha, 
+            beta, 
+            previous_timestep_input: initial_input, 
+            offset: initial_value, 
+            delay, 
+            response_vec: vec![], 
+            exponent_type,
+        })
+    }
+    /// constructor for new critically damped system
+    /// with two equal roots
+    ///
+    /// it will be in the form 
+    ///
+    /// magnitude_alpha * t * exp (-alpha t) 
+    /// + magnitude_beta * exp (- beta t)
+    ///
+    /// magnitude_alpha is necessarily in a frequency unit
+    /// and it will be converted into hertz before storage
+    ///
+    ///
+    pub fn new_critical(
+        magnitude_alpha: Frequency,
+        magnitude_beta: Ratio,
+        alpha: Frequency,
+        beta: Frequency,
+        initial_input: Ratio,
+        initial_value: Ratio,
+        delay: Time) -> Result<Self,ChemEngProcessControlSimulatorError> {
+
+        // if damping factor is less than or equal 
+        // 0, should throw an error 
+        // or panic (i will use errors maybe later?)
+
+        let exponent_type = DecayingExponentialType::CriticallyDamped;
+        let magnitude_alpha = Ratio::new::<ratio>(
+            magnitude_alpha.get::<hertz>()
+        );
+
+        if alpha.value <= 0.0 {
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
+        }
+        Ok(DecayingExponential { 
+            magnitude_alpha,
+            magnitude_beta, 
+            alpha, 
+            beta, 
+            previous_timestep_input: initial_input, 
+            offset: initial_value, 
+            delay, 
+            response_vec: vec![], 
+            exponent_type,
+        })
+    }
     /// sets the user input to some value
     pub fn set_user_input_and_calc_output(&mut self, 
         current_time: Time,
