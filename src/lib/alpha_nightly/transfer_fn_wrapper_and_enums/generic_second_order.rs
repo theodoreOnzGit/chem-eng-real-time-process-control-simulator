@@ -4,7 +4,7 @@ use uom::si::f64::*;
 use uom::si::time::second;
 use uom::ConstZero;
 
-use crate::alpha_nightly::TimeSquared;
+use crate::alpha_nightly::{TimeSquared, stable_transfer_functions::decaying_exponentials::DecayingExponential};
 use crate::alpha_nightly::errors::ChemEngProcessControlSimulatorError;
 use crate::alpha_nightly::stable_transfer_functions::decaying_sinusoid::DecayingSinusoid;
 use crate::alpha_nightly::stable_transfer_functions::second_order_transfer_fn::SecondOrderStableTransferFnNoZeroes;
@@ -30,8 +30,10 @@ pub enum TransferFnSecondOrder {
     StableUnderdamped(
         SecondOrderStableTransferFnNoZeroes,
         DecayingSinusoid,DecayingSinusoid),
-    StableCriticallydamped,
-    StableOverdamped,
+    StableCriticallydamped(SecondOrderStableTransferFnNoZeroes,
+        DecayingExponential),
+    StableOverdamped(SecondOrderStableTransferFnNoZeroes,
+        DecayingExponential),
     Unstable,
     Undamped,
 }
@@ -56,8 +58,16 @@ impl TransferFnTraits for TransferFnSecondOrder {
                     sine_term.delay = dead_time;
 
             },
-            TransferFnSecondOrder::StableCriticallydamped => todo!(),
-            TransferFnSecondOrder::StableOverdamped => todo!(),
+            TransferFnSecondOrder::StableCriticallydamped(
+                non_zero_steady_state_mode,decaying_mode) => {
+                non_zero_steady_state_mode.delay = dead_time;
+                decaying_mode.delay = dead_time;
+            },
+            TransferFnSecondOrder::StableOverdamped(
+                non_zero_steady_state_mode,decaying_mode) => {
+                non_zero_steady_state_mode.delay = dead_time;
+                decaying_mode.delay = dead_time;
+            },
             TransferFnSecondOrder::Unstable => todo!(),
             TransferFnSecondOrder::Undamped => todo!(),
         }
@@ -66,24 +76,24 @@ impl TransferFnTraits for TransferFnSecondOrder {
 
     fn set_user_input_and_calc(&mut self, user_input: Ratio,
         time: Time) -> 
-    Result<Ratio, ChemEngProcessControlSimulatorError> {
+        Result<Ratio, ChemEngProcessControlSimulatorError> {
 
-        match self {
-            TransferFnSecondOrder::StableUnderdamped(
-                tf_no_zeroes, 
-                cosine_decaying_sinusoid, 
-                sine_decaying_sinusoid_) => {
+            match self {
+                TransferFnSecondOrder::StableUnderdamped(
+                    tf_no_zeroes, 
+                    cosine_decaying_sinusoid, 
+                    sine_decaying_sinusoid_) => {
                     let mut response: Ratio = Ratio::ZERO;
 
                     let tf_no_zeroes_output = 
-                    tf_no_zeroes.set_user_input_and_calc_output(
-                        time, user_input)?;
+                        tf_no_zeroes.set_user_input_and_calc_output(
+                            time, user_input)?;
                     let cosine_decaying_output = 
-                    cosine_decaying_sinusoid.set_user_input_and_calc_output(
-                        time, user_input)?;
+                        cosine_decaying_sinusoid.set_user_input_and_calc_output(
+                            time, user_input)?;
                     let sine_decaying_output = 
-                    sine_decaying_sinusoid_.set_user_input_and_calc_output(
-                        time, user_input)?;
+                        sine_decaying_sinusoid_.set_user_input_and_calc_output(
+                            time, user_input)?;
 
                     //dbg!(sine_decaying_output);
                     //dbg!(cosine_decaying_output);
@@ -95,28 +105,62 @@ impl TransferFnTraits for TransferFnSecondOrder {
                     return Ok(response);
 
                 },
-            TransferFnSecondOrder::StableCriticallydamped => todo!(),
-            TransferFnSecondOrder::StableOverdamped => todo!(),
-            TransferFnSecondOrder::Unstable => todo!(),
-            TransferFnSecondOrder::Undamped => todo!(),
-        }
+                TransferFnSecondOrder::StableCriticallydamped(
+                    non_zero_steady_state_mode,decaying_mode)=> {
+                    let mut response: Ratio = Ratio::ZERO;
+
+                    let non_zero_steady_state_output = 
+                        non_zero_steady_state_mode.set_user_input_and_calc_output(
+                            time, user_input)?;
+                    let decaying_output = 
+                        decaying_mode.set_user_input_and_calc_output(
+                            time, user_input)?;
+                    response += non_zero_steady_state_output;
+                    response += decaying_output;
+
+                    return Ok(response);
+
+
+                },
+                TransferFnSecondOrder::StableOverdamped( 
+                    non_zero_steady_state_mode,decaying_mode)=> {
+                    let mut response: Ratio = Ratio::ZERO;
+
+                    let non_zero_steady_state_output = 
+                        non_zero_steady_state_mode.set_user_input_and_calc_output(
+                            time, user_input)?;
+                    let decaying_output = 
+                        decaying_mode.set_user_input_and_calc_output(
+                            time, user_input)?;
+                    response += non_zero_steady_state_output;
+                    response += decaying_output;
+
+                    return Ok(response);
+                },
+                TransferFnSecondOrder::Unstable => todo!(),
+                TransferFnSecondOrder::Undamped => todo!(),
+            }
 
     }
 
     fn spawn_writer(&mut self, name: String) -> Result<Writer<std::fs::File>,
-    ChemEngProcessControlSimulatorError>{
-        let mut title_string: String = name;
-        match self {
-            TransferFnSecondOrder::StableUnderdamped(_, _, _) => {
-                title_string += "2nd_ord_transfer_fn_stable_underdamped.csv";
-            },
-            TransferFnSecondOrder::StableCriticallydamped => todo!(),
-            TransferFnSecondOrder::StableOverdamped => todo!(),
-            TransferFnSecondOrder::Unstable => todo!(),
-            TransferFnSecondOrder::Undamped => todo!(),
-        }
-        let wtr = Writer::from_path(title_string)?;
-        Ok(wtr)
+        ChemEngProcessControlSimulatorError>{
+            let mut title_string: String = name;
+            match self {
+                TransferFnSecondOrder::StableUnderdamped(_, _, _) => {
+                    title_string += "2nd_ord_transfer_fn_stable_underdamped.csv";
+                },
+                TransferFnSecondOrder::StableCriticallydamped(_,_) => {
+                    title_string += "2nd_ord_transfer_fn_stable_critdamped.csv";
+                },
+                TransferFnSecondOrder::StableOverdamped(_,_) => {
+                    title_string += "2nd_ord_transfer_fn_stable_overdamped.csv";
+                },
+                TransferFnSecondOrder::Unstable => todo!(),
+                TransferFnSecondOrder::Undamped => todo!(),
+            }
+            let wtr = Writer::from_path(title_string)?;
+            Ok(wtr)
     }
 
     fn csv_write_values(&mut self, 
@@ -124,19 +168,19 @@ impl TransferFnTraits for TransferFnSecondOrder {
         time: Time,
         input: Ratio,
         output: Ratio) -> Result<(), 
-    ChemEngProcessControlSimulatorError> {
+        ChemEngProcessControlSimulatorError> {
 
-        let current_time_string = time.get::<second>().to_string();
-        let input_string = input.get::<ratio>().to_string();
-        let output_string = output.get::<ratio>().to_string();
+            let current_time_string = time.get::<second>().to_string();
+            let input_string = input.get::<ratio>().to_string();
+            let output_string = output.get::<ratio>().to_string();
 
-        wtr.write_record(&[current_time_string,
-            input_string,
-            output_string])?;
+            wtr.write_record(&[current_time_string,
+                input_string,
+                output_string])?;
 
-        wtr.flush().unwrap();
+            wtr.flush().unwrap();
 
-        Ok(())
+            Ok(())
     }
 
 
@@ -163,11 +207,11 @@ impl TransferFnSecondOrder {
     /// Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>
     /// 
     pub fn new(a1: TimeSquared,
-    b1: Time,
-    c1: Ratio,
-    a2: TimeSquared,
-    b2: Time,
-    c2: Ratio) -> Result<Self,ChemEngProcessControlSimulatorError> {
+        b1: Time,
+        c1: Ratio,
+        a2: TimeSquared,
+        b2: Time,
+        c2: Ratio) -> Result<Self,ChemEngProcessControlSimulatorError> {
 
 
         // process time 
@@ -201,7 +245,7 @@ impl TransferFnSecondOrder {
             // critically damped system, not implemented yet
             todo!("critically system, not implemented yet");
         } else {
-            
+
             // overdamped system
             todo!("overdamped system, not implemented yet");
         }
@@ -225,20 +269,20 @@ impl TransferFnSecondOrder {
         // types and one SecondOrderStableTransferFunction Type
         // 
         let second_order_stable_transfer_fn_no_zeroes: 
-        SecondOrderStableTransferFnNoZeroes = 
-        SecondOrderStableTransferFnNoZeroes::new(k_p, 
-            tau_p, 
-            zeta, 
-            Ratio::ZERO, 
-            Ratio::ZERO, 
-            Time::ZERO)?;
+            SecondOrderStableTransferFnNoZeroes = 
+            SecondOrderStableTransferFnNoZeroes::new(k_p, 
+                tau_p, 
+                zeta, 
+                Ratio::ZERO, 
+                Ratio::ZERO, 
+                Time::ZERO)?;
 
 
         // let's make the decaying sinusoids first: 
 
         let cosine_coeff: Ratio = a1/a2;
         let sine_coeff: Ratio = -cosine_coeff * lambda/omega + 
-        b1/a2/omega;
+            b1/a2/omega;
 
         // now let's get the waveforms
 
@@ -283,20 +327,20 @@ pub fn test_dead_time(){
     /// ------------------
     /// a2 s^2 + b2 s + c2
     type TimeSquared = 
-    Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>;
+        Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>;
 
     let a1: TimeSquared = 
-    FrequencyDrift::new::<hertz_per_second>(1.0).recip();
+        FrequencyDrift::new::<hertz_per_second>(1.0).recip();
     let b1: Time = Time::new::<second>(1.0);
     let c1: Ratio = Ratio::new::<ratio>(1.0);
 
     let a2: 
-    TimeSquared = FrequencyDrift::new::<hertz_per_second>(1.0).recip();
+        TimeSquared = FrequencyDrift::new::<hertz_per_second>(1.0).recip();
     let b2: Time = Time::new::<second>(1.0);
     let c2: Ratio = Ratio::new::<ratio>(2.0);
 
     let mut tf: TransferFn = 
-    TransferFnSecondOrder::new(a1, b1, c1, a2, b2, c2).unwrap().into();
+        TransferFnSecondOrder::new(a1, b1, c1, a2, b2, c2).unwrap().into();
 
     let dead_time = Time::new::<second>(5.0);
     tf.set_dead_time(dead_time);
@@ -304,7 +348,7 @@ pub fn test_dead_time(){
     // i need to match two enums, but I'm only going to use if let
     if let TransferFn::SecondOrder(second_order) = tf {
         if let TransferFnSecondOrder::StableUnderdamped(
-        tf_no_zeroes, cosine_sinusoidal_decay, sine_sinusoidal_decay) = second_order {
+            tf_no_zeroes, cosine_sinusoidal_decay, sine_sinusoidal_decay) = second_order {
             assert_eq!(tf_no_zeroes.delay, dead_time);
             assert_eq!(cosine_sinusoidal_decay.delay, dead_time);
             assert_eq!(sine_sinusoidal_decay.delay, dead_time);
@@ -323,16 +367,16 @@ impl Into<TransferFn> for TransferFnSecondOrder {
 impl TryFrom<TransferFn> for TransferFnSecondOrder {
     type Error = ChemEngProcessControlSimulatorError;
     fn try_from(generic_transfer_function: TransferFn) 
-    -> Result<Self, Self::Error> {
+        -> Result<Self, Self::Error> {
 
-        if let TransferFn::SecondOrder(
-        second_order) = generic_transfer_function {
-            return Ok(second_order);
-        } else {
-            return Err(ChemEngProcessControlSimulatorError::WrongTransferFnType);
-        };
+            if let TransferFn::SecondOrder(
+                second_order) = generic_transfer_function {
+                return Ok(second_order);
+            } else {
+                return Err(ChemEngProcessControlSimulatorError::WrongTransferFnType);
+            };
 
 
-    }
+        }
 }
 
