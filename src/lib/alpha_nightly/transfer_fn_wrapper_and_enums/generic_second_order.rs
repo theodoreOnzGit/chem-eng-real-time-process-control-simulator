@@ -253,6 +253,63 @@ impl TransferFnSecondOrder {
 
     }
 
+    // critically damped stable systems
+    #[inline]
+    fn new_critdamped_stable_system(tau_p: Time,
+        zeta: Ratio,
+        k_p: Ratio,
+        lambda: Frequency,
+        omega: Frequency,
+        a1: TimeSquared,
+        a2: TimeSquared,
+        b1: Time) -> Result<Self, ChemEngProcessControlSimulatorError>{
+
+        todo!();
+
+        // critically damped systems will contain one decaying_exponential
+        // one SecondOrderStableTransferFunction Type
+        // 
+        let second_order_stable_transfer_fn_no_zeroes: 
+            SecondOrderStableTransferFnNoZeroes = 
+            SecondOrderStableTransferFnNoZeroes::new(k_p, 
+                tau_p, 
+                zeta, 
+                Ratio::ZERO, 
+                Ratio::ZERO, 
+                Time::ZERO)?;
+
+
+        // let's make the decaying sinusoids first: 
+
+        let cosine_coeff: Ratio = a1/a2;
+        let sine_coeff: Ratio = -cosine_coeff * lambda/omega + 
+            b1/a2/omega;
+
+        // now let's get the waveforms
+
+        let cosine_term: DecayingSinusoid = DecayingSinusoid::new_cosine(
+            cosine_coeff, 
+            lambda, 
+            Ratio::ZERO, 
+            Ratio::ZERO, 
+            Time::ZERO, 
+            omega)?;
+
+        let sine_term: DecayingSinusoid = DecayingSinusoid::new_sine(
+            sine_coeff, 
+            lambda, 
+            Ratio::ZERO, 
+            Ratio::ZERO, 
+            Time::ZERO, 
+            omega)?;
+
+        let underdamped_system = Self::StableUnderdamped(
+            second_order_stable_transfer_fn_no_zeroes, cosine_term,
+            sine_term);
+
+        return Ok(underdamped_system);
+
+    }
 
     // underdamped stable systems
     #[inline]
