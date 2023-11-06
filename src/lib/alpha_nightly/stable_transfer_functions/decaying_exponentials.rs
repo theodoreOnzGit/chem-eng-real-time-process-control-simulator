@@ -115,6 +115,83 @@ impl DecayExponentialResponse {
         })
     }
 
+    /// constructor for new over damped system
+    /// with two real roots
+    pub fn new_overdamped(
+        magnitude_alpha: Ratio,
+        magnitude_beta: Ratio,
+        alpha: Frequency,
+        beta: Frequency,
+        start_time: Time,
+        user_input: Ratio,
+        current_time: Time) -> Result<Self,ChemEngProcessControlSimulatorError> {
+
+        // if damping factor is less than or equal 
+        // 0, should throw an error 
+        // or panic (i will use errors maybe later?)
+
+        let exponential_type = DecayingExponentialType::Overdamped;
+
+        if alpha.value <= 0.0 {
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
+        }
+        Ok(DecayExponentialResponse { 
+            magnitude_alpha, 
+            magnitude_beta, 
+            alpha, 
+            beta,
+            start_time, 
+            user_input, 
+            current_time,
+            exponential_type,
+        })
+    }
+    /// constructor for new over damped system
+    /// with two equal roots
+    ///
+    /// it will be in the form 
+    ///
+    /// magnitude_alpha * t * exp (-alpha t) 
+    /// + magnitude_beta * exp (- beta t)
+    ///
+    /// magnitude_alpha is necessarily in a frequency unit
+    /// and it will be converted into hertz before storage
+    ///
+    ///
+    pub fn new_critical(
+        magnitude_alpha: Frequency,
+        magnitude_beta: Ratio,
+        alpha: Frequency,
+        beta: Frequency,
+        start_time: Time,
+        user_input: Ratio,
+        current_time: Time) -> Result<Self,ChemEngProcessControlSimulatorError> {
+
+        // if damping factor is less than or equal 
+        // 0, should throw an error 
+        // or panic (i will use errors maybe later?)
+
+        let exponential_type = DecayingExponentialType::CriticallyDamped;
+        let magnitude_alpha = Ratio::new::<ratio>(
+            magnitude_alpha.get::<hertz>()
+        );
+
+        if alpha.value <= 0.0 {
+            return Err(ChemEngProcessControlSimulatorError::
+                UnstableDampingFactorForStableTransferFunction);
+        }
+        Ok(DecayExponentialResponse { 
+            magnitude_alpha, 
+            magnitude_beta, 
+            alpha, 
+            beta,
+            start_time, 
+            user_input, 
+            current_time,
+            exponential_type,
+        })
+    }
     /// checks if the transfer function has more or less reached 
     /// steady state,
     ///
@@ -166,8 +243,11 @@ impl DecayExponentialResponse {
                 let exponent_ratio: Ratio = 
                     lambda_t * (-lambda_t.get::<ratio>()).exp() 
                     * inverse_lambda.get::<second>();
-                
-                if exponent_ratio < Ratio::new::<ratio>(1e-10) {
+
+                let exponent_decayed: bool =  at > Ratio::new::<ratio>(20.0) && 
+                    bt > Ratio::new::<ratio>(20.0);                
+
+                if exponent_decayed && exponent_ratio < Ratio::new::<ratio>(1e-10) {
                     return true;
                 }
 
