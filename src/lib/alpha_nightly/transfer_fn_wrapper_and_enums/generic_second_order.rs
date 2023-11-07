@@ -287,16 +287,14 @@ impl TransferFnSecondOrder {
 
         let discriminant: TimeSquared = b2*b2 - 4.0 * a2* c2;
 
-        let alpha: Frequency = b2/a2  - (0.5/a2) * discriminant.sqrt();
-        let beta: Frequency = b2/a2  + (0.5/a2) * discriminant.sqrt();
+        let alpha: Frequency = 0.5*b2/a2  - (0.5/a2) * discriminant.sqrt();
+        let beta: Frequency = 0.5*b2/a2  + (0.5/a2) * discriminant.sqrt();
 
         // now we can calculate the alpha_magnitude and 
         // beta_magnitude 
 
         let magnitude_alpha: Ratio = (- alpha * a1/a2 + b1/a2)/(-alpha + beta);
         let magnitude_beta: Ratio = (- beta * a1/a2+ b1/a2)/(-beta + alpha);
-
-
 
 
         // now I need to create a new decaying exponential 

@@ -636,6 +636,81 @@ pub(crate) fn demo_stable_overdamped_second_order_simulation(){
 
 /// This is a simulation of:
 ///
+///          -2s+ 1
+/// G(s) = ---------------------------
+///         s^2 + 3 s + 2
+///
+/// The roots of the denominator are at s = -1  and s = -2 
+/// 
+/// Two real roots means this is an overdamped system
+///
+/// Input is in the form:
+///
+/// G(s) = 
+///
+/// a1 s^2 + b1 s + c1
+/// ------------------
+/// a2 s^2 + b2 s + c2
+///
+/// Input is 5 units at t=0s
+///
+pub(crate) fn debug2_stable_overdamped_second_order_simulation(){
+
+    use uom::si::{Quantity, ISQ, SI};
+    use uom::typenum::*;
+    // type alias called TimeSquared
+    type TimeSquared = 
+    Quantity<ISQ<Z0, Z0, P2, Z0, Z0, Z0, Z0>, SI<f64>, f64>;
+
+    let one_second = Time::new::<second>(1.0);
+
+    let a1: TimeSquared = one_second * Time::new::<second>(0.0);
+    let b1: Time = -Time::new::<second>(2.0);
+    let c1: Ratio = Ratio::new::<ratio>(1.0);
+
+    let a2: TimeSquared =one_second * one_second* 1.0;
+    let b2: Time = Time::new::<second>(3.0);
+    let c2: Ratio = Ratio::new::<ratio>(2.0);
+    let mut current_simulation_time: Time = Time::new::<second>(0.0);
+    let max_simulation_time: Time = Time::new::<second>(30 as f64);
+    let timestep: Time = Time::new::<second>(0.1);
+
+    let mut tf = TransferFnSecondOrder::new(a1, b1, c1, a2, b2, c2).unwrap();
+    //
+    let mut user_input = Ratio::ZERO;
+
+    // writer creation
+
+    let mut wtr = tf.spawn_writer("debug2_overdamped_".to_string()).unwrap();
+
+    let stuff_to_do_in_simulation_loop = move ||{
+
+        
+        // step up to 5 if t > 0 
+        if current_simulation_time >= Time::ZERO {
+            user_input = Ratio::new::<ratio>(5.0);
+        }
+
+        let output = tf.set_user_input_and_calc(
+            user_input,current_simulation_time).unwrap();
+
+        let writer_borrow = &mut wtr;
+        tf.csv_write_values(writer_borrow, current_simulation_time, 
+            user_input, output).unwrap();
+        
+        current_simulation_time += timestep;
+    };
+
+    // need to create a pointer for the stuff_to_do_in_simulation_loop
+    // this is to enable parallelism
+    let user_task_ptr = Arc::new(Mutex::new(stuff_to_do_in_simulation_loop));
+    simulation_template(max_simulation_time, timestep, current_simulation_time,
+        user_task_ptr);
+
+
+}
+/// This is a simulation of:
+///
 ///          1
 /// G(s) = ---------------------------
 ///         s^2 + 3 s + 2
