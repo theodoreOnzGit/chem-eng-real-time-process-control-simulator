@@ -366,8 +366,8 @@ impl DecayingExponential {
 /// overdamping. 
 #[derive(Debug,PartialEq, PartialOrd, Clone, Copy)]
 pub(crate) struct DecayExponentialResponse {
-    magnitude_alpha: Ratio,
-    magnitude_beta: Ratio,
+    magnitude_alpha_times_user_input: Ratio,
+    magnitude_beta_times_user_input: Ratio,
     alpha: Frequency,
     beta: Frequency,
     start_time: Time,
@@ -383,8 +383,8 @@ impl Default for DecayExponentialResponse {
     /// frequency in hertz
     fn default() -> Self {
         DecayExponentialResponse { 
-            magnitude_alpha: Ratio::new::<ratio>(1.0), 
-            magnitude_beta: Ratio::new::<ratio>(1.0), 
+            magnitude_alpha_times_user_input: Ratio::new::<ratio>(1.0), 
+            magnitude_beta_times_user_input: Ratio::new::<ratio>(1.0), 
             alpha: Frequency::new::<hertz>(1.0), 
             beta: Frequency::new::<hertz>(1.0),
             start_time: Time::new::<second>(0.0), 
@@ -400,7 +400,7 @@ impl DecayExponentialResponse {
 
     /// constructor 
     pub fn new_single_root(
-        magnitude: Ratio,
+        magnitude_times_user_input: Ratio,
         decay_constant: Frequency,
         start_time: Time,
         user_input: Ratio,
@@ -419,8 +419,8 @@ impl DecayExponentialResponse {
                 UnstableDampingFactorForStableTransferFunction);
         }
         Ok(DecayExponentialResponse { 
-            magnitude_alpha: magnitude, 
-            magnitude_beta: magnitude, 
+            magnitude_alpha_times_user_input: magnitude_times_user_input, 
+            magnitude_beta_times_user_input: magnitude_times_user_input, 
             alpha, 
             start_time, 
             user_input, 
@@ -433,8 +433,8 @@ impl DecayExponentialResponse {
     /// constructor for new over damped system
     /// with two real roots
     pub fn new_overdamped(
-        magnitude_alpha: Ratio,
-        magnitude_beta: Ratio,
+        magnitude_alpha_times_user_input: Ratio,
+        magnitude_beta_times_user_input: Ratio,
         alpha: Frequency,
         beta: Frequency,
         start_time: Time,
@@ -452,8 +452,8 @@ impl DecayExponentialResponse {
                 UnstableDampingFactorForStableTransferFunction);
         }
         Ok(DecayExponentialResponse { 
-            magnitude_alpha, 
-            magnitude_beta, 
+            magnitude_alpha_times_user_input, 
+            magnitude_beta_times_user_input, 
             alpha, 
             beta,
             start_time, 
@@ -475,8 +475,8 @@ impl DecayExponentialResponse {
     ///
     ///
     pub fn new_critical(
-        magnitude_alpha: Frequency,
-        magnitude_beta: Ratio,
+        magnitude_alpha_times_user_input: Frequency,
+        magnitude_beta_times_user_input: Ratio,
         alpha: Frequency,
         beta: Frequency,
         start_time: Time,
@@ -488,8 +488,8 @@ impl DecayExponentialResponse {
         // or panic (i will use errors maybe later?)
 
         let exponential_type = DecayingExponentialType::CriticallyDamped;
-        let magnitude_alpha = Ratio::new::<ratio>(
-            magnitude_alpha.get::<hertz>()
+        let magnitude_alpha_times_user_input = Ratio::new::<ratio>(
+            magnitude_alpha_times_user_input.get::<hertz>()
         );
 
         if alpha.value <= 0.0 {
@@ -497,8 +497,8 @@ impl DecayExponentialResponse {
                 UnstableDampingFactorForStableTransferFunction);
         }
         Ok(DecayExponentialResponse { 
-            magnitude_alpha, 
-            magnitude_beta, 
+            magnitude_alpha_times_user_input, 
+            magnitude_beta_times_user_input, 
             alpha, 
             beta,
             start_time, 
@@ -596,7 +596,7 @@ impl DecayExponentialResponse {
 
         // first let's deal with the heaviside function
 
-        let heaviside_on: bool = self.current_time > self.start_time;
+        let heaviside_on: bool = self.current_time >= self.start_time;
 
         // if the current time is before start time, no response 
         // from this transfer function
@@ -625,14 +625,12 @@ impl DecayExponentialResponse {
 
                 // stopped here (todo), debug the magnitudes of alpha and beta
                 //
-                let t_exponential_response = self.magnitude_alpha * 
+                let t_exponential_response = self.magnitude_alpha_times_user_input * 
                     time_elapsed.get::<second>() *
                     (-alpha_t.get::<ratio>()).exp();
 
-                let exponential_response = self.magnitude_beta * 
+                let exponential_response = self.magnitude_beta_times_user_input * 
                     (-beta_t.get::<ratio>()).exp();
-
-                dbg!(&t_exponential_response);
 
                 t_exponential_response + exponential_response
 
@@ -643,15 +641,15 @@ impl DecayExponentialResponse {
                 // for two unequal roots, also quite straightforward
                 // magnitude_alpha * exp(-alpha t)
                 // magnitude_beta * exp(-beta t)
-                self.magnitude_alpha * 
+                self.magnitude_alpha_times_user_input * 
                     (-alpha_t.get::<ratio>()).exp() +
-                self.magnitude_beta * 
+                self.magnitude_beta_times_user_input * 
                     (-beta_t.get::<ratio>()).exp()
             },
             DecayingExponentialType::Single => {
                 // for single root, it's pretty straightforward,
                 // the response is magnitude * exp(-at) 
-                self.magnitude_alpha * 
+                self.magnitude_alpha_times_user_input * 
                     (-alpha_t.get::<ratio>()).exp()
             },
 
