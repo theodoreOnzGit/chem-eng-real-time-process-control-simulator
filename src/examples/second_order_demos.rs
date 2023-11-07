@@ -605,7 +605,7 @@ pub(crate) fn demo_stable_overdamped_second_order_simulation(){
 
     // writer creation
 
-    let mut wtr = tf.spawn_writer("demo_second_order_".to_string()).unwrap();
+    let mut wtr = tf.spawn_writer("demo_overdamped_".to_string()).unwrap();
 
     let stuff_to_do_in_simulation_loop = move ||{
 

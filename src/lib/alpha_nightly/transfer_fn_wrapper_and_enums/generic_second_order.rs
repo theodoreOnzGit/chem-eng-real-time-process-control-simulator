@@ -251,9 +251,77 @@ impl TransferFnSecondOrder {
                 tau_p, zeta, k_p, lambda, a1, a2, b1);
         } else {
 
-            // overdamped system
-            todo!("overdamped system, not implemented yet");
+            return Self::new_overdamped_stable_system(
+                tau_p, zeta, k_p, a1, a2, b1, b2, c2);
         }
+
+
+    }
+    // over damped stable systems
+    #[inline]
+    fn new_overdamped_stable_system(tau_p: Time,
+        zeta: Ratio,
+        k_p: Ratio,
+        a1: TimeSquared,
+        a2: TimeSquared,
+        b1: Time,
+        b2: Time,
+        c2: Ratio) -> Result<Self, ChemEngProcessControlSimulatorError>{
+
+        // for this, we have two real roots
+        // the c1 coefficient has a transfer function calculated,
+        // we don't need to do it again
+        let second_order_stable_transfer_fn_no_zeroes: 
+            SecondOrderStableTransferFnNoZeroes = 
+            SecondOrderStableTransferFnNoZeroes::new(k_p, 
+                tau_p, 
+                zeta, 
+                Ratio::ZERO, 
+                Ratio::ZERO, 
+                Time::ZERO)?;
+
+        // next is to deal with the decaying exponential terms 
+
+        // for these we need two real roots
+        // I'm going to use the discriminant formula 
+
+        let discriminant: TimeSquared = b2*b2 - 4.0 * a2* c2;
+
+        let alpha: Frequency = b2/a2  - (0.5/a2) * discriminant.sqrt();
+        let beta: Frequency = b2/a2  + (0.5/a2) * discriminant.sqrt();
+
+        // now we can calculate the alpha_magnitude and 
+        // beta_magnitude 
+
+        let magnitude_alpha: Ratio = a1/a2 * (- alpha + b1/a1)/(-alpha + beta);
+        let magnitude_beta: Ratio = a1/a2 * (- beta + b1/a1)/(-beta + alpha);
+
+
+
+
+        // now I need to create a new decaying exponential 
+        // no delays are given
+        let overdamped_decaying_exponential = DecayingExponential::
+            new_overdamped(magnitude_alpha, magnitude_beta, alpha, 
+                beta, 
+                Ratio::ZERO, 
+                Ratio::ZERO, 
+                Time::ZERO)?;
+        // looks like inputs are done correctly
+        //dbg!(&lambda);
+        //dbg!(&t_exponential_coefficient);
+        //dbg!(&crit_decaying_exponential.magnitude_alpha);
+
+        //dbg!(&exponential_coefficient);
+        //dbg!(&crit_decaying_exponential.magnitude_beta);
+        // now combine them in the enum 
+
+        return Ok(
+            TransferFnSecondOrder::StableOverdamped(
+                second_order_stable_transfer_fn_no_zeroes, 
+                overdamped_decaying_exponential)
+            );
+
 
 
     }
