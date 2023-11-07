@@ -247,7 +247,8 @@ impl TransferFnSecondOrder {
             // note that this only applies for critical and underdamped cases
             let lambda: Frequency = 0.5 *b2/a2;
             // critically damped system, not implemented yet
-            todo!("critically system, not implemented yet");
+            return Self::new_critdamped_stable_system(
+                tau_p, zeta, k_p, lambda, a1, a2, b1);
         } else {
 
             // overdamped system
