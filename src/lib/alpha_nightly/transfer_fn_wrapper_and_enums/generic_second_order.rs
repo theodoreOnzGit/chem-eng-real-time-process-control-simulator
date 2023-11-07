@@ -224,24 +224,28 @@ impl TransferFnSecondOrder {
         // I assume units of c1 are dimensionless
         let k_p: Ratio = c1/c2;
 
-        // decay constant 
-        let lambda: Frequency = 0.5 *b2/a2;
-
-        // angular frequency for decaying sinusoids
-        let omega: Frequency = (c2/a2 - 0.25*b2*b2/a2/a2).sqrt();
-
+        // damping factor
         let zeta_value: f64 = zeta.get::<ratio>();
 
         if zeta_value < 0.0 {
             // unstable system
             todo!("unstable system, not implemented");
         } else if zeta_value < 1.0 {
-            // undamped system
+            // angular frequency for decaying sinusoids IF we have 
+            // an underdamped system
+            let omega: Frequency = (c2/a2 - 0.25*b2*b2/a2/a2).sqrt();
+        // decay constant 
+        // note that this only applies for critical and underdamped cases
+            let lambda: Frequency = 0.5 *b2/a2;
+            // underdamped system
             return Self::new_underdamped_stable_system(tau_p, 
                 zeta, 
                 k_p, lambda, omega, a1, a2, b1);
 
         } else if zeta_value == 1.0 {
+            // decay constant 
+            // note that this only applies for critical and underdamped cases
+            let lambda: Frequency = 0.5 *b2/a2;
             // critically damped system, not implemented yet
             todo!("critically system, not implemented yet");
         } else {
@@ -259,16 +263,25 @@ impl TransferFnSecondOrder {
         zeta: Ratio,
         k_p: Ratio,
         lambda: Frequency,
-        omega: Frequency,
         a1: TimeSquared,
         a2: TimeSquared,
         b1: Time) -> Result<Self, ChemEngProcessControlSimulatorError>{
 
-        todo!();
+        // supposing has zeta, k_p, lambda
+        // where lambda is 0.5 a2/b2
+        //
+        // we have three terms to deal with. 
+        // Firstly the standard second order stable transfer fn
+        // which deals with the c1 term
+        //
+        // remember the form 
+        // (a1 s^2 + b1 s + c1)/(a2 s^2 + b2 s + c2)
+        //
+        // The c1 term represents the part with no zeroes,
+        // which has a steady state value
+        //
+        // the other term consists of decaying exponentials
 
-        // critically damped systems will contain one decaying_exponential
-        // one SecondOrderStableTransferFunction Type
-        // 
         let second_order_stable_transfer_fn_no_zeroes: 
             SecondOrderStableTransferFnNoZeroes = 
             SecondOrderStableTransferFnNoZeroes::new(k_p, 
@@ -278,36 +291,41 @@ impl TransferFnSecondOrder {
                 Ratio::ZERO, 
                 Time::ZERO)?;
 
+        // next is to deal with the decaying exponential terms 
+        // which are in a1s + b
+        // the overall coefficient is a1/a2 
+        //
+        // Laplace of { (a1s + b)/(a2 s^2 + bs + c) } 
+        // = a1/a2 { exp (-lambda t) + (b1/a1 - lambda) 
+        // * t exp(- lambda t)} 
+        //
+        // the overall coefficient is a1/a2 
+        // it is also the exponential coefficient
 
-        // let's make the decaying sinusoids first: 
+        let overall_coefficient: Ratio = a1/a2;
 
-        let cosine_coeff: Ratio = a1/a2;
-        let sine_coeff: Ratio = -cosine_coeff * lambda/omega + 
-            b1/a2/omega;
+        let exponential_coefficient: Ratio = overall_coefficient;
+        let t_exponential_coefficient: Frequency 
+            = overall_coefficient * (b1/a1 - lambda);
 
-        // now let's get the waveforms
-
-        let cosine_term: DecayingSinusoid = DecayingSinusoid::new_cosine(
-            cosine_coeff, 
+        // now I need to create a new decaying exponential 
+        // no delays are given
+        let crit_decaying_exponential = DecayingExponential::new_critical(
+            t_exponential_coefficient, 
+            exponential_coefficient, 
             lambda, 
             Ratio::ZERO, 
             Ratio::ZERO, 
-            Time::ZERO, 
-            omega)?;
+            Time::ZERO)?;
 
-        let sine_term: DecayingSinusoid = DecayingSinusoid::new_sine(
-            sine_coeff, 
-            lambda, 
-            Ratio::ZERO, 
-            Ratio::ZERO, 
-            Time::ZERO, 
-            omega)?;
+        // now combine them in the enum 
 
-        let underdamped_system = Self::StableUnderdamped(
-            second_order_stable_transfer_fn_no_zeroes, cosine_term,
-            sine_term);
+        return Ok(
+            TransferFnSecondOrder::StableCriticallydamped(
+                second_order_stable_transfer_fn_no_zeroes, 
+                crit_decaying_exponential)
+            );
 
-        return Ok(underdamped_system);
 
     }
 

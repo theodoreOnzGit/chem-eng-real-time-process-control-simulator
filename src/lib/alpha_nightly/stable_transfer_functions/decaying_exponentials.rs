@@ -123,8 +123,7 @@ impl DecayingExponential {
     pub fn new_critical(
         magnitude_alpha: Frequency,
         magnitude_beta: Ratio,
-        alpha: Frequency,
-        beta: Frequency,
+        lambda: Frequency,
         initial_input: Ratio,
         initial_value: Ratio,
         delay: Time) -> Result<Self,ChemEngProcessControlSimulatorError> {
@@ -137,6 +136,13 @@ impl DecayingExponential {
         let magnitude_alpha = Ratio::new::<ratio>(
             magnitude_alpha.get::<hertz>()
         );
+
+        // for critically damped systems, there is only one characteristic 
+        // damping frequency, which is lambda
+        // therefore, the real part of the 
+        // two roots, alpha and beta are the same
+        let alpha = lambda;
+        let beta =  lambda;
 
         if alpha.value <= 0.0 {
             return Err(ChemEngProcessControlSimulatorError::
