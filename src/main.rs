@@ -25,6 +25,7 @@ fn main() {
     examples::second_order_demos::demo_complex_stable_underdamped_second_order_simulation();
     examples::second_order_demos::demo_stable_critdamped_second_order_simulation();
     examples::second_order_demos::debug_stable_critdamped_second_order_simulation();
+    examples::second_order_demos::debug2_stable_critdamped_second_order_simulation();
 
     // overdamped case tbc
     examples::second_order_demos::demo_stable_overdamped_second_order_simulation();

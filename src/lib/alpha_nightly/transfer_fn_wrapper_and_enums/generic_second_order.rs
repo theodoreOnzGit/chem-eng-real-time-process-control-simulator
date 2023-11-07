@@ -308,6 +308,7 @@ impl TransferFnSecondOrder {
         let t_exponential_coefficient: Frequency 
             = b1/a2 - lambda * a1/a2;
 
+
         // now I need to create a new decaying exponential 
         // no delays are given
         let crit_decaying_exponential = DecayingExponential::new_critical(
@@ -317,7 +318,13 @@ impl TransferFnSecondOrder {
             Ratio::ZERO, 
             Ratio::ZERO, 
             Time::ZERO)?;
+        // looks like inputs are done correctly
+        //dbg!(&lambda);
+        //dbg!(&t_exponential_coefficient);
+        //dbg!(&crit_decaying_exponential.magnitude_alpha);
 
+        //dbg!(&exponential_coefficient);
+        //dbg!(&crit_decaying_exponential.magnitude_beta);
         // now combine them in the enum 
 
         return Ok(

@@ -177,9 +177,12 @@ impl DecayingExponential {
         if input_changed {
             // need to add a response to the vector
 
-            let magnitude_alpha = self.magnitude_alpha;
-            let magnitude_beta = self.magnitude_beta;
             let user_input = current_input - self.previous_timestep_input;
+            let magnitude_alpha_times_user_input = self.magnitude_alpha
+                *user_input;
+            dbg!(&magnitude_alpha_times_user_input);
+            let magnitude_beta_times_user_input = self.magnitude_beta
+                *user_input;
             // the time where the first order response kicks in
             let start_time = current_time + self.delay;
             let exponent_type = self.exponent_type;
@@ -193,8 +196,8 @@ impl DecayingExponential {
                 DecayingExponentialType::Overdamped => {
                     new_response = 
                         DecayExponentialResponse::new_overdamped(
-                            magnitude_alpha, 
-                            magnitude_beta, 
+                            magnitude_alpha_times_user_input, 
+                            magnitude_beta_times_user_input, 
                             alpha, 
                             beta, 
                             start_time, 
@@ -205,9 +208,9 @@ impl DecayingExponential {
                     new_response = 
                         DecayExponentialResponse::new_critical(
                             Frequency::new::<hertz>(
-                                magnitude_alpha.get::<ratio>()
+                                magnitude_alpha_times_user_input.get::<ratio>()
                             ), 
-                            magnitude_beta, 
+                            magnitude_beta_times_user_input, 
                             alpha, 
                             beta, 
                             start_time, 
@@ -217,7 +220,7 @@ impl DecayingExponential {
                 DecayingExponentialType::Single => {
                     new_response = 
                         DecayExponentialResponse::new_single_root(
-                            magnitude_alpha,
+                            magnitude_alpha_times_user_input,
                             alpha, 
                             start_time, 
                             user_input, 
@@ -556,8 +559,8 @@ impl DecayExponentialResponse {
                     lambda_t * (-lambda_t.get::<ratio>()).exp() 
                     * inverse_lambda.get::<second>();
 
-                let exponent_decayed: bool =  at > Ratio::new::<ratio>(20.0) && 
-                    bt > Ratio::new::<ratio>(20.0);                
+                let exponent_decayed: bool =  at > Ratio::new::<ratio>(23.0) && 
+                    bt > Ratio::new::<ratio>(23.0);                
 
                 if exponent_decayed && exponent_ratio < Ratio::new::<ratio>(1e-10) {
                     return true;
@@ -614,11 +617,26 @@ impl DecayExponentialResponse {
                 // for two equal roots, also quite straightforward
                 // magnitude_alpha * t * exp(-alpha t)
                 // magnitude_beta * exp(-beta t)
-                self.magnitude_alpha * 
+
+                //dbg!(&(-alpha_t.get::<ratio>()).exp()*time_elapsed.get::<second>()
+                //    *self.magnitude_alpha);
+
+                //dbg!(&self.magnitude_alpha);
+
+                // stopped here (todo), debug the magnitudes of alpha and beta
+                //
+                let t_exponential_response = self.magnitude_alpha * 
                     time_elapsed.get::<second>() *
-                    (-alpha_t.get::<ratio>()).exp() +
-                self.magnitude_beta * 
-                    (-beta_t.get::<ratio>()).exp()
+                    (-alpha_t.get::<ratio>()).exp();
+
+                let exponential_response = self.magnitude_beta * 
+                    (-beta_t.get::<ratio>()).exp();
+
+                dbg!(&t_exponential_response);
+
+                t_exponential_response + exponential_response
+
+
 
             },
             DecayingExponentialType::Overdamped => {
