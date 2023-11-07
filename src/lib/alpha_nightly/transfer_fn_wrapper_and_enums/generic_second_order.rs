@@ -95,9 +95,6 @@ impl TransferFnTraits for TransferFnSecondOrder {
                         sine_decaying_sinusoid_.set_user_input_and_calc_output(
                             time, user_input)?;
 
-                    //dbg!(sine_decaying_output);
-                    //dbg!(cosine_decaying_output);
-                    //dbg!(tf_no_zeroes_output);
 
                     response += tf_no_zeroes_output;
                     response += cosine_decaying_output;
@@ -287,14 +284,17 @@ impl TransferFnSecondOrder {
 
         let discriminant: TimeSquared = b2*b2 - 4.0 * a2* c2;
 
+        // verified correct...
         let alpha: Frequency = 0.5*b2/a2  - (0.5/a2) * discriminant.sqrt();
         let beta: Frequency = 0.5*b2/a2  + (0.5/a2) * discriminant.sqrt();
 
         // now we can calculate the alpha_magnitude and 
         // beta_magnitude 
 
+        // verified correct...
         let magnitude_alpha: Ratio = (- alpha * a1/a2 + b1/a2)/(-alpha + beta);
         let magnitude_beta: Ratio = (- beta * a1/a2+ b1/a2)/(-beta + alpha);
+
 
 
         // now I need to create a new decaying exponential 

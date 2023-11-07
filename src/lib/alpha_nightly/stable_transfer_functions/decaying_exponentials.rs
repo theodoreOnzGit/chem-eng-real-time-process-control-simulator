@@ -617,12 +617,6 @@ impl DecayExponentialResponse {
                 // magnitude_alpha * t * exp(-alpha t)
                 // magnitude_beta * exp(-beta t)
 
-                //dbg!(&(-alpha_t.get::<ratio>()).exp()*time_elapsed.get::<second>()
-                //    *self.magnitude_alpha);
-
-                //dbg!(&self.magnitude_alpha);
-
-                // stopped here (todo), debug the magnitudes of alpha and beta
                 //
                 let t_exponential_response = self.magnitude_alpha_times_user_input * 
                     time_elapsed.get::<second>() *
@@ -640,6 +634,8 @@ impl DecayExponentialResponse {
                 // for two unequal roots, also quite straightforward
                 // magnitude_alpha * exp(-alpha t)
                 // magnitude_beta * exp(-beta t)
+                // user input part checks out
+                
                 self.magnitude_alpha_times_user_input * 
                     (-alpha_t.get::<ratio>()).exp() +
                 self.magnitude_beta_times_user_input * 
