@@ -303,11 +303,10 @@ impl TransferFnSecondOrder {
         // the overall coefficient is a1/a2 
         // it is also the exponential coefficient
 
-        let overall_coefficient: Ratio = a1/a2;
 
-        let exponential_coefficient: Ratio = overall_coefficient;
+        let exponential_coefficient: Ratio = a1/a2;
         let t_exponential_coefficient: Frequency 
-            = overall_coefficient * (b1/a1 - lambda);
+            = b1/a2 - lambda * a1/a2;
 
         // now I need to create a new decaying exponential 
         // no delays are given
