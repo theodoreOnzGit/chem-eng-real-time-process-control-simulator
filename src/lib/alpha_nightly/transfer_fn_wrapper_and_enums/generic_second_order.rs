@@ -293,8 +293,8 @@ impl TransferFnSecondOrder {
         // now we can calculate the alpha_magnitude and 
         // beta_magnitude 
 
-        let magnitude_alpha: Ratio = a1/a2 * (- alpha + b1/a1)/(-alpha + beta);
-        let magnitude_beta: Ratio = a1/a2 * (- beta + b1/a1)/(-beta + alpha);
+        let magnitude_alpha: Ratio = (- alpha * a1/a2 + b1/a2)/(-alpha + beta);
+        let magnitude_beta: Ratio = (- beta * a1/a2+ b1/a2)/(-beta + alpha);
 
 
 
@@ -307,14 +307,6 @@ impl TransferFnSecondOrder {
                 Ratio::ZERO, 
                 Ratio::ZERO, 
                 Time::ZERO)?;
-        // looks like inputs are done correctly
-        //dbg!(&lambda);
-        //dbg!(&t_exponential_coefficient);
-        //dbg!(&crit_decaying_exponential.magnitude_alpha);
-
-        //dbg!(&exponential_coefficient);
-        //dbg!(&crit_decaying_exponential.magnitude_beta);
-        // now combine them in the enum 
 
         return Ok(
             TransferFnSecondOrder::StableOverdamped(
@@ -386,14 +378,6 @@ impl TransferFnSecondOrder {
             Ratio::ZERO, 
             Ratio::ZERO, 
             Time::ZERO)?;
-        // looks like inputs are done correctly
-        //dbg!(&lambda);
-        //dbg!(&t_exponential_coefficient);
-        //dbg!(&crit_decaying_exponential.magnitude_alpha);
-
-        //dbg!(&exponential_coefficient);
-        //dbg!(&crit_decaying_exponential.magnitude_beta);
-        // now combine them in the enum 
 
         return Ok(
             TransferFnSecondOrder::StableCriticallydamped(

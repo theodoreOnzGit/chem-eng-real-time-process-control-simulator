@@ -180,7 +180,6 @@ impl DecayingExponential {
             let user_input = current_input - self.previous_timestep_input;
             let magnitude_alpha_times_user_input = self.magnitude_alpha
                 *user_input;
-            dbg!(&magnitude_alpha_times_user_input);
             let magnitude_beta_times_user_input = self.magnitude_beta
                 *user_input;
             // the time where the first order response kicks in
