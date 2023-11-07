@@ -22,7 +22,7 @@ pub struct DecayingSecondOrderExponential {
     /// delay
     pub(crate) delay: Time,
     /// vector of first order responses 
-    pub(crate) response_vec: Vec<DecayExponentialResponse>,
+    pub(crate) response_vec: Vec<DecaySecondOrderExponentialResponse>,
     /// choose whether it's a critically damped or 
     /// overdamped system
     pub(crate) exponent_type: DecayingExponentialType,
@@ -159,7 +159,7 @@ impl DecayingSecondOrderExponential {
             match exponent_type {
                 DecayingExponentialType::Overdamped => {
                     new_response = 
-                        DecayExponentialResponse::new_overdamped(
+                        DecaySecondOrderExponentialResponse::new_overdamped(
                             magnitude_alpha_times_user_input, 
                             magnitude_beta_times_user_input, 
                             alpha, 
@@ -170,7 +170,7 @@ impl DecayingSecondOrderExponential {
                 },
                 DecayingExponentialType::CriticallyDamped => {
                     new_response = 
-                        DecayExponentialResponse::new_critical(
+                        DecaySecondOrderExponentialResponse::new_critical(
                             Frequency::new::<hertz>(
                                 magnitude_alpha_times_user_input.get::<ratio>()
                             ), 
@@ -320,7 +320,7 @@ impl DecayingSecondOrderExponential {
 /// The second is where we have two real unequal roots. This is 
 /// overdamping. 
 #[derive(Debug,PartialEq, PartialOrd, Clone, Copy)]
-pub(crate) struct DecayExponentialResponse {
+pub(crate) struct DecaySecondOrderExponentialResponse {
     magnitude_alpha_times_user_input: Ratio,
     magnitude_beta_times_user_input: Ratio,
     alpha: Frequency,
@@ -331,13 +331,13 @@ pub(crate) struct DecayExponentialResponse {
     exponential_type: DecayingExponentialType,
 }
 
-impl Default for DecayExponentialResponse {
+impl Default for DecaySecondOrderExponentialResponse {
     /// default is a critically damped system with 
     /// 1 / ( (s+1)^2 + 1)
     /// time in seconds, 
     /// frequency in hertz
     fn default() -> Self {
-        DecayExponentialResponse { 
+        DecaySecondOrderExponentialResponse { 
             magnitude_alpha_times_user_input: Ratio::new::<ratio>(1.0), 
             magnitude_beta_times_user_input: Ratio::new::<ratio>(1.0), 
             alpha: Frequency::new::<hertz>(1.0), 
@@ -351,7 +351,7 @@ impl Default for DecayExponentialResponse {
 }
 
 
-impl DecayExponentialResponse {
+impl DecaySecondOrderExponentialResponse {
 
 
     /// constructor for new over damped system
@@ -375,7 +375,7 @@ impl DecayExponentialResponse {
             return Err(ChemEngProcessControlSimulatorError::
                 UnstableDampingFactorForStableTransferFunction);
         }
-        Ok(DecayExponentialResponse { 
+        Ok(DecaySecondOrderExponentialResponse { 
             magnitude_alpha_times_user_input, 
             magnitude_beta_times_user_input, 
             alpha, 
@@ -420,7 +420,7 @@ impl DecayExponentialResponse {
             return Err(ChemEngProcessControlSimulatorError::
                 UnstableDampingFactorForStableTransferFunction);
         }
-        Ok(DecayExponentialResponse { 
+        Ok(DecaySecondOrderExponentialResponse { 
             magnitude_alpha_times_user_input, 
             magnitude_beta_times_user_input, 
             alpha, 
