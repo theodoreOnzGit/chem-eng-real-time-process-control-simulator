@@ -1,6 +1,6 @@
 [package]
 name = "chem-eng-real-time-process-control-simulator"
-version = "0.0.3"
+version = "0.0.4"
 edition = "2021"
 license = "Apache-2.0"
 description = "Process Control Library (Chemical Engineering) with real time transfer function simulators"
