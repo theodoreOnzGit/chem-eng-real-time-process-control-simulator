@@ -332,6 +332,7 @@ impl SecondOrderStableStepResponse {
         } else if damping_factor.get::<ratio>() == 1.0 {
 
             // case 2: critically damped system
+            // probably need to redo this bit
             if time_ratio > 23.0 {
                 return true;
             }
