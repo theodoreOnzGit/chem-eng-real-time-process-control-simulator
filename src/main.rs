@@ -24,12 +24,8 @@ fn main() {
     examples::second_order_demos::decaying_sine_stable_underdamped_second_order_simulation();
     examples::second_order_demos::demo_complex_stable_underdamped_second_order_simulation();
     examples::second_order_demos::demo_stable_critdamped_second_order_simulation();
-    examples::second_order_demos::debug_stable_critdamped_second_order_simulation();
-    examples::second_order_demos::debug2_stable_critdamped_second_order_simulation();
 
     examples::second_order_demos::demo_stable_overdamped_second_order_simulation();
-    examples::second_order_demos::debug_stable_overdamped_second_order_simulation();
-    examples::second_order_demos::debug2_stable_overdamped_second_order_simulation();
 
     examples::first_order_demos::stable_first_order_with_delay_simulation_no_zeroes();
     examples::first_order_demos::stable_first_order_with_delay_simulation_with_zeroes();
@@ -42,5 +38,17 @@ fn main() {
     examples::analog_pid_demos::proportional_standalone_feedback_test();
     examples::analog_pid_demos::proportional_controller_step_test();
     examples::feedback_control_examples::proportional_derivative_kick_eliminator_feedback_loop_example();
+
+    // uncomment for debug 
+    //_debug();
+}
+
+// some tests and examples are used for debugging, i leave them here
+fn _debug(){
+    examples::second_order_demos::_debug_stable_critdamped_second_order_simulation();
+    examples::second_order_demos::_debug2_stable_critdamped_second_order_simulation();
+    examples::second_order_demos::_debug_stable_overdamped_second_order_simulation();
+    examples::second_order_demos::_debug2_stable_overdamped_second_order_simulation();
+
 }
 

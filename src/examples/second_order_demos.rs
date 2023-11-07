@@ -429,7 +429,7 @@ pub(crate) fn demo_stable_critdamped_second_order_simulation(){
 ///
 /// Input is 5 units at t=0s
 ///
-pub(crate) fn debug2_stable_critdamped_second_order_simulation(){
+pub(crate) fn _debug2_stable_critdamped_second_order_simulation(){
 
     use uom::si::{Quantity, ISQ, SI};
     use uom::typenum::*;
@@ -502,7 +502,7 @@ pub(crate) fn debug2_stable_critdamped_second_order_simulation(){
 ///
 /// Input is 5 units at t=0s
 ///
-pub(crate) fn debug_stable_critdamped_second_order_simulation(){
+pub(crate) fn _debug_stable_critdamped_second_order_simulation(){
 
     use uom::si::{Quantity, ISQ, SI};
     use uom::typenum::*;
@@ -654,7 +654,7 @@ pub(crate) fn demo_stable_overdamped_second_order_simulation(){
 ///
 /// Input is 5 units at t=0s
 ///
-pub(crate) fn debug2_stable_overdamped_second_order_simulation(){
+pub(crate) fn _debug2_stable_overdamped_second_order_simulation(){
 
     use uom::si::{Quantity, ISQ, SI};
     use uom::typenum::*;
@@ -729,7 +729,7 @@ pub(crate) fn debug2_stable_overdamped_second_order_simulation(){
 ///
 /// Input is 5 units at t=0s
 ///
-pub(crate) fn debug_stable_overdamped_second_order_simulation(){
+pub(crate) fn _debug_stable_overdamped_second_order_simulation(){
 
     use uom::si::{Quantity, ISQ, SI};
     use uom::typenum::*;
