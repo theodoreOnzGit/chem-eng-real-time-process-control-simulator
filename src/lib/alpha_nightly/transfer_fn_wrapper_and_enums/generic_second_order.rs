@@ -4,7 +4,7 @@ use uom::si::f64::*;
 use uom::si::time::second;
 use uom::ConstZero;
 
-use crate::alpha_nightly::{TimeSquared, stable_transfer_functions::decaying_exponentials::DecayingExponential};
+use crate::alpha_nightly::{TimeSquared, stable_transfer_functions::decaying_exponentials::DecayingSecondOrderExponential};
 use crate::alpha_nightly::errors::ChemEngProcessControlSimulatorError;
 use crate::alpha_nightly::stable_transfer_functions::decaying_sinusoid::DecayingSinusoid;
 use crate::alpha_nightly::stable_transfer_functions::second_order_transfer_fn::SecondOrderStableTransferFnNoZeroes;
@@ -31,9 +31,9 @@ pub enum TransferFnSecondOrder {
         SecondOrderStableTransferFnNoZeroes,
         DecayingSinusoid,DecayingSinusoid),
     StableCriticallydamped(SecondOrderStableTransferFnNoZeroes,
-        DecayingExponential),
+        DecayingSecondOrderExponential),
     StableOverdamped(SecondOrderStableTransferFnNoZeroes,
-        DecayingExponential),
+        DecayingSecondOrderExponential),
     Unstable,
     Undamped,
 }
@@ -299,7 +299,7 @@ impl TransferFnSecondOrder {
 
         // now I need to create a new decaying exponential 
         // no delays are given
-        let overdamped_decaying_exponential = DecayingExponential::
+        let overdamped_decaying_exponential = DecayingSecondOrderExponential::
             new_overdamped(magnitude_alpha, magnitude_beta, alpha, 
                 beta, 
                 Ratio::ZERO, 
@@ -369,7 +369,7 @@ impl TransferFnSecondOrder {
 
         // now I need to create a new decaying exponential 
         // no delays are given
-        let crit_decaying_exponential = DecayingExponential::new_critical(
+        let crit_decaying_exponential = DecayingSecondOrderExponential::new_critical(
             t_exponential_coefficient, 
             exponential_coefficient, 
             lambda, 

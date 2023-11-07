@@ -8,7 +8,7 @@ use crate::alpha_nightly::errors::ChemEngProcessControlSimulatorError;
 ///
 ///
 #[derive(Debug,PartialEq, PartialOrd, Clone)]
-pub struct DecayingExponential {
+pub struct DecayingSecondOrderExponential {
     pub(crate) magnitude_alpha: Ratio,
     pub(crate) magnitude_beta: Ratio,
     /// decay frequency of first root, 
@@ -34,46 +34,11 @@ pub enum DecayingExponentialType {
     Overdamped, 
     // two equal real roots
     CriticallyDamped,
-    // one root only
-    Single,
 
 }
 
-impl DecayingExponential {
+impl DecayingSecondOrderExponential {
 
-    /// constructor 
-    pub fn new_single_root(
-        magnitude: Ratio,
-        decay_constant: Frequency,
-        initial_input: Ratio,
-        initial_value: Ratio,
-        delay: Time,
-    ) -> Result<Self,ChemEngProcessControlSimulatorError> {
-
-        // if damping factor is less than or equal 
-        // 0, should throw an error 
-        // or panic (i will use errors maybe later?)
-
-        let alpha = decay_constant;
-        let beta = decay_constant;
-        let exponent_type = DecayingExponentialType::Single;
-
-        if alpha.value <= 0.0 {
-            return Err(ChemEngProcessControlSimulatorError::
-                UnstableDampingFactorForStableTransferFunction);
-        }
-        Ok(DecayingExponential { 
-            magnitude_alpha: magnitude,
-            magnitude_beta: magnitude, 
-            alpha, 
-            beta, 
-            previous_timestep_input: initial_input, 
-            offset: initial_value, 
-            delay, 
-            response_vec: vec![], 
-            exponent_type,
-        })
-    }
 
     /// constructor for new over damped system
     /// with two real roots
@@ -96,7 +61,7 @@ impl DecayingExponential {
             return Err(ChemEngProcessControlSimulatorError::
                 UnstableDampingFactorForStableTransferFunction);
         }
-        Ok(DecayingExponential { 
+        Ok(DecayingSecondOrderExponential { 
             magnitude_alpha,
             magnitude_beta, 
             alpha, 
@@ -148,7 +113,7 @@ impl DecayingExponential {
             return Err(ChemEngProcessControlSimulatorError::
                 UnstableDampingFactorForStableTransferFunction);
         }
-        Ok(DecayingExponential { 
+        Ok(DecayingSecondOrderExponential { 
             magnitude_alpha,
             magnitude_beta, 
             alpha, 
@@ -212,15 +177,6 @@ impl DecayingExponential {
                             magnitude_beta_times_user_input, 
                             alpha, 
                             beta, 
-                            start_time, 
-                            user_input, 
-                            current_time)?
-                },
-                DecayingExponentialType::Single => {
-                    new_response = 
-                        DecayExponentialResponse::new_single_root(
-                            magnitude_alpha_times_user_input,
-                            alpha, 
                             start_time, 
                             user_input, 
                             current_time)?
@@ -397,37 +353,6 @@ impl Default for DecayExponentialResponse {
 
 impl DecayExponentialResponse {
 
-    /// constructor 
-    pub fn new_single_root(
-        magnitude_times_user_input: Ratio,
-        decay_constant: Frequency,
-        start_time: Time,
-        user_input: Ratio,
-        current_time: Time) -> Result<Self,ChemEngProcessControlSimulatorError> {
-
-        // if damping factor is less than or equal 
-        // 0, should throw an error 
-        // or panic (i will use errors maybe later?)
-
-        let alpha = decay_constant;
-        let beta = decay_constant;
-        let exponential_type = DecayingExponentialType::Single;
-
-        if alpha.value <= 0.0 {
-            return Err(ChemEngProcessControlSimulatorError::
-                UnstableDampingFactorForStableTransferFunction);
-        }
-        Ok(DecayExponentialResponse { 
-            magnitude_alpha_times_user_input: magnitude_times_user_input, 
-            magnitude_beta_times_user_input: magnitude_times_user_input, 
-            alpha, 
-            start_time, 
-            user_input, 
-            current_time,
-            beta,
-            exponential_type,
-        })
-    }
 
     /// constructor for new over damped system
     /// with two real roots
@@ -568,14 +493,6 @@ impl DecayExponentialResponse {
 
 
             },
-            DecayingExponentialType::Single => {
-                // for single type, the condition is the same 
-                // because at should equal bt if initiated properly
-                if at > Ratio::new::<ratio>(20.0) && 
-                bt > Ratio::new::<ratio>(20.0) {
-                    return true;
-                }
-            },
         }
 
 
@@ -640,12 +557,6 @@ impl DecayExponentialResponse {
                     (-alpha_t.get::<ratio>()).exp() +
                 self.magnitude_beta_times_user_input * 
                     (-beta_t.get::<ratio>()).exp()
-            },
-            DecayingExponentialType::Single => {
-                // for single root, it's pretty straightforward,
-                // the response is magnitude * exp(-at) 
-                self.magnitude_alpha_times_user_input * 
-                    (-alpha_t.get::<ratio>()).exp()
             },
 
         };
